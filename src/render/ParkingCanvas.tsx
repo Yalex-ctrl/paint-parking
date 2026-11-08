@@ -12,7 +12,8 @@ import type { Level } from '../game/types';
 import { fitCamera, type Margins } from './cameraFit';
 import { cellAt, ROAD_W, SIDEWALK, SLAB_H, VEHICLE_H } from './coords';
 import { digitTexture, emojiTexture } from './textures';
-import { crownGeometry, lightsGeometry, shadowGeometry, carGeometry } from './vehicleGeometry';
+import { crownGeometry, lightsGeometry, shadowGeometry, carGeometry, skinGeometry } from './vehicleGeometry';
+import { specOf, type Finish } from './skinSpecs';
 import { buildLotGeometry, gateGeometry } from './lotGeometry';
 import { EMOJIS, PUFFS, TRAIL_CAPACITY, type ParkingScene } from './ParkingScene';
 import { LOT_COLORS } from './palette';
@@ -66,6 +67,8 @@ type Props = {
   active?: boolean;
   /** Scenery around the board (the "Décors" setting). */
   decor: boolean;
+  /** The equipped vehicle skin (shop id): worn by the vehicle with the crown. */
+  skin: string;
   onReady?: () => void;
 };
 
@@ -210,6 +213,19 @@ function Gate({ level, scene, index, info }: { level: Level; scene: ParkingScene
 
 /* ----------------------------------------------------------------------------------------- vehicles */
 
+const skinMaterials = new Map<Finish, THREE.Material>();
+/** One material per finish: matt, glossy, metallic (a strong highlight) or neon (it glows: no shading). */
+export function skinMaterial(finish: Finish): THREE.Material {
+  let m = skinMaterials.get(finish);
+  if (!m) {
+    if (finish === 'neon') m = new THREE.MeshBasicMaterial({ vertexColors: true });
+    else if (finish === 'matte') m = new THREE.MeshLambertMaterial({ vertexColors: true });
+    else m = new THREE.MeshPhongMaterial({ vertexColors: true, shininess: finish === 'metal' ? 110 : 55, specular: finish === 'metal' ? 0xffffff : 0x666666 });
+    skinMaterials.set(finish, m);
+  }
+  return m;
+}
+
 const _m = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _s = new THREE.Vector3(1, 1, 1);
@@ -221,7 +237,7 @@ const Z = new THREE.Vector3(0, 0, 1);
 const X = new THREE.Vector3(1, 0, 0);
 const _c = new THREE.Color();
 
-function Vehicles({ scene }: { scene: ParkingScene }) {
+function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
   const a = sharedAssets();
   const cars = useMemo(() => scene.actors.filter((x) => x.len === 2), [scene]);
   const trucks = useMemo(() => scene.actors.filter((x) => x.len === 3), [scene]);
@@ -234,7 +250,12 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
     truckShadow: useRef<THREE.InstancedMesh>(null),
   };
   const crown = useRef<THREE.Mesh>(null);
+  const worn = useRef<THREE.Mesh>(null);
   const first = useRef(true);
+  const spec = specOf(skin);
+  const player = scene.actors[scene.player];
+  const wornGeometry = useMemo(() => (player ? skinGeometry(spec, player.len) : null), [spec, player]);
+  useEffect(() => () => wornGeometry?.dispose(), [wornGeometry]);
 
   useLayoutEffect(() => {
     for (const [mesh, list] of [
@@ -247,7 +268,7 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
     }
     first.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cars, trucks]);
+  }, [cars, trucks, wornGeometry]);
 
   useFrame(() => {
     if (!first.current && !scene.active) return;
@@ -256,7 +277,9 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
       if (!body || !lights || !shadow) return;
       list.forEach((actor, i) => {
         const hide = actor.hidden;
-        _s.setScalar(hide ? 0 : 1);
+        // The vehicle that wears a skin is drawn apart (its colours are in its geometry).
+        const dressed = actor.id === scene.player && wornGeometry !== null;
+        _s.setScalar(hide || dressed ? 0 : 1);
         _q.setFromAxisAngle(Y, actor.yaw);
         _q2.setFromAxisAngle(Z, -actor.pitch);
         _q3.setFromAxisAngle(X, actor.roll);
@@ -267,6 +290,7 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
         lights.setMatrixAt(i, _m);
         _q.setFromAxisAngle(Y, actor.yaw);
         _p.set(actor.x, 0.036, actor.z);
+        _s.setScalar(hide ? 0 : 1);
         _m.compose(_p, _q, _s);
         shadow.setMatrixAt(i, _m);
       });
@@ -276,6 +300,15 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
     };
     write(cars, refs.car.current, refs.carLights.current, refs.carShadow.current);
     write(trucks, refs.truck.current, refs.truckLights.current, refs.truckShadow.current);
+    const w = worn.current;
+    if (w && player) {
+      w.visible = !player.hidden;
+      w.position.set(player.x, 0.03, player.z);
+      _q.setFromAxisAngle(Y, player.yaw);
+      _q2.setFromAxisAngle(Z, -player.pitch);
+      _q3.setFromAxisAngle(X, player.roll);
+      w.quaternion.copy(_q.multiply(_q2).multiply(_q3));
+    }
     const c = crown.current;
     const p = scene.actors[scene.player];
     if (c) {
@@ -300,6 +333,7 @@ function Vehicles({ scene }: { scene: ParkingScene }) {
           <instancedMesh ref={refs.truckLights} args={[a.truckLights, a.lit, trucks.length]} frustumCulled={false} />
         </>
       )}
+      {wornGeometry && <mesh ref={worn} geometry={wornGeometry} material={skinMaterial(spec.finish)} />}
       <mesh ref={crown} geometry={a.crown} material={a.lit} visible={scene.player >= 0} />
     </group>
   );
@@ -515,7 +549,7 @@ function Decor({ level, enabled }: { level: Level; enabled: boolean }) {
 
 /* ----------------------------------------------------------------------------------------- canvas */
 
-function Scene({ level, scene, bridge, margins, decor, onReady }: Omit<Props, 'active'>) {
+function Scene({ level, scene, bridge, margins, decor, skin, onReady }: Omit<Props, 'active'>) {
   return (
     <>
       <CameraRig level={level} margins={margins} bridge={bridge} />
@@ -524,7 +558,7 @@ function Scene({ level, scene, bridge, margins, decor, onReady }: Omit<Props, 'a
       <Lot level={level} scene={scene} />
       <Decor level={level} enabled={decor} />
       <Trails scene={scene} />
-      <Vehicles scene={scene} />
+      <Vehicles scene={scene} skin={skin} />
       <Effects scene={scene} />
       <HintMarker scene={scene} />
     </>

@@ -6,6 +6,7 @@ import { isHorizontal, vehicleCells, vehicleDirs, type Level } from '../game/typ
 import { cellX, cellZ } from './coords';
 import { ACCEL, distanceAt, exitPath, samplePath, yawOf, type ExitPath, type Pose } from './paths';
 import { VEHICLE_PALETTE } from './palette';
+import { createRng } from '../core/rng';
 
 /**
  * Everything that moves in the parking, kept out of React: the scene reads these numbers every frame and nothing is allocated while
@@ -106,6 +107,8 @@ export class ParkingScene {
 
   constructor(level: Level, trailOverride?: { vehicle: number; color: string } | null) {
     this.level = level;
+    // The vehicle that wears the crown (and the equipped skin) is drawn from the level alone: the same one on a restart.
+    this.player = level.vehicles.length > 0 ? createRng(level.seed).int(0, level.vehicles.length - 1) : -1;
     this.actors = level.vehicles.map((v) => {
       const cells = vehicleCells(v);
       const [r0, c0] = cells[0];

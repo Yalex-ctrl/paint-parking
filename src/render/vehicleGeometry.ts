@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { SkinSpec } from './skinSpecs';
 
 import { box, cylinder, merge, sphere, wheel } from './geo';
 
@@ -76,5 +77,134 @@ export function crownGeometry(): THREE.BufferGeometry {
     parts.push(cylinder(0, 0.05, 0.1, x, 0.02, z, '#f7c531', 5));
   }
   parts.push(sphere(0.04, 0, 0.1, 0, '#ffffff'));
+  return merge(parts);
+}
+
+/* ------------------------------------------------------------------------------------------ skins */
+
+/**
+ * A vehicle of the shop: the same shape as `carGeometry`, but every colour is in the geometry (nothing is tinted by an instance),
+ * with the marks of its skin on top (a light bar, a sign, stripes, spots...). Used for the one vehicle that wears the equipped skin.
+ */
+export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
+  const L = len * CELL_FILL;
+  const W = WIDTH;
+  const parts: THREE.BufferGeometry[] = [];
+  const topY = 0.325;
+  const roofTop = len === 2 ? 0.565 : 0.74;
+  const x = (frac: number) => L * frac;
+  parts.push(box(L, 0.2, W, 0, 0.22, 0, spec.body));
+  if (len === 2) {
+    const tall = spec.extras.includes('tallroof');
+    const cabH = tall ? 0.4 : 0.2;
+    parts.push(box(L * 0.48, cabH, W * 0.88, x(-0.08), 0.32 + cabH / 2, 0, GLASS));
+    if (spec.extras.includes('roundroof')) parts.push(sphere(0.3, x(-0.1), 0.5, 0, spec.roof));
+    else parts.push(box(L * 0.4, 0.05, W * 0.8, x(-0.1), 0.32 + cabH + 0.025, 0, spec.roof));
+    parts.push(box(0.06, cabH - 0.02, W * 0.84, x(0.17), 0.32 + cabH / 2, 0, spec.body));
+  } else {
+    parts.push(box(x(0.3), 0.3, W * 0.96, x(0.33), 0.47, 0, spec.body));
+    parts.push(box(x(0.04), 0.17, W * 0.88, x(0.48), 0.5, 0, GLASS));
+    parts.push(box(x(0.62), 0.42, W * 0.98, x(-0.2), 0.53, 0, spec.roof));
+  }
+  const axles = len === 2 ? [L * 0.3, -L * 0.3] : [L * 0.36, -L * 0.18, -L * 0.36];
+  for (const ax of axles) for (const side of [-1, 1]) parts.push(wheel(0.13, 0.1, ax, 0.13, side * W * 0.5, TYRE));
+  for (const side of [-1, 1]) {
+    parts.push(box(0.06, 0.08, 0.13, L / 2 + 0.005, 0.25, side * W * 0.3, HEAD));
+    parts.push(box(0.06, 0.08, 0.13, -L / 2 - 0.005, 0.25, side * W * 0.3, TAIL));
+  }
+  const top = spec.extras.includes('tallroof') ? 0.76 : roofTop;
+  for (const e of spec.extras) {
+    switch (e) {
+      case 'lightbar':
+        parts.push(box(0.1, 0.06, 0.16, x(-0.1), top + 0.04, -0.12, '#e03a3a'));
+        parts.push(box(0.1, 0.06, 0.16, x(-0.1), top + 0.04, 0.12, '#3a6ae0'));
+        break;
+      case 'sign':
+        parts.push(box(0.2, 0.08, 0.14, x(-0.1), top + 0.05, 0, '#fff7c2'));
+        break;
+      case 'cross':
+        for (const side of [-1, 1]) {
+          parts.push(box(0.26, 0.07, 0.02, x(-0.12), 0.34, side * (W / 2 + 0.005), spec.accent));
+          parts.push(box(0.07, 0.26, 0.02, x(-0.12), 0.34, side * (W / 2 + 0.005), spec.accent));
+        }
+        break;
+      case 'ladder':
+        parts.push(box(L * 0.55, 0.04, 0.12, x(-0.2), top + 0.04, 0, '#c8ccd4'));
+        parts.push(box(L * 0.55, 0.04, 0.02, x(-0.2), top + 0.04, -0.06, '#8a8e96'));
+        break;
+      case 'cone':
+        parts.push(cylinder(0.11, 0, 0.2, x(-0.1), top - 0.02, 0, '#e8c07a', 8));
+        parts.push(sphere(0.12, x(-0.1), top + 0.26, 0, '#ff8fb8'));
+        break;
+      case 'spoiler':
+        parts.push(box(0.1, 0.03, W * 0.9, -L / 2 + 0.06, 0.5, 0, spec.accent));
+        for (const side of [-1, 1]) parts.push(box(0.03, 0.12, 0.03, -L / 2 + 0.06, 0.42, side * W * 0.3, spec.body));
+        break;
+      case 'stripes':
+        for (const z of [-0.09, 0.09]) parts.push(box(L * 0.98, 0.012, 0.07, 0, topY + 0.004, z, spec.accent));
+        break;
+      case 'bands':
+        for (const side of [-1, 1]) parts.push(box(L * 0.9, 0.06, 0.012, 0, 0.27, side * (W / 2 + 0.003), spec.accent));
+        break;
+      case 'camo':
+        [
+          [-0.3, 0.12, 0.18, 0.12],
+          [0.1, -0.15, 0.2, 0.14],
+          [0.32, 0.1, 0.14, 0.1],
+          [-0.05, 0.05, 0.12, 0.1],
+        ].forEach(([fx, z, w, d]) => parts.push(box(w, 0.012, d, x(fx), topY + 0.004, z, spec.accent)));
+        break;
+      case 'zebra':
+        for (let i = -3; i <= 3; i++) parts.push(box(0.07, 0.012, W * 0.98, i * L * 0.13, topY + 0.004, 0, spec.accent));
+        break;
+      case 'spots':
+        [
+          [-0.3, 0.12],
+          [0.0, -0.15],
+          [0.3, 0.1],
+          [-0.15, -0.05],
+          [0.15, 0.2],
+        ].forEach(([fx, z]) => parts.push(cylinder(0.05, 0.05, 0.012, x(fx), topY, z, spec.accent, 6)));
+        break;
+      case 'flames':
+        for (const side of [-1, 1]) {
+          for (let i = 0; i < 3; i++) parts.push(box(0.16 - i * 0.03, 0.05 + i * 0.03, 0.012, x(0.3 - i * 0.14), 0.27 + i * 0.01, side * (W / 2 + 0.003), spec.accent));
+        }
+        break;
+      case 'stars':
+        [
+          [-0.3, 0.1],
+          [-0.1, -0.2],
+          [0.15, 0.15],
+          [0.3, -0.1],
+          [0.0, 0.0],
+        ].forEach(([fx, z]) => parts.push(box(0.04, 0.012, 0.04, x(fx), topY + 0.004, z, spec.accent)));
+        break;
+      case 'dots':
+        [
+          [-0.3, 0.15],
+          [-0.3, -0.15],
+          [0.05, 0.12],
+          [0.05, -0.12],
+          [0.3, 0.0],
+        ].forEach(([fx, z]) => parts.push(cylinder(0.06, 0.06, 0.012, x(fx), topY, z, spec.accent, 8)));
+        break;
+      case 'checker':
+        for (let i = -3; i <= 3; i++) for (const side of [-1, 1]) parts.push(box(0.09, 0.05, 0.012, i * 0.1, 0.27, side * (W / 2 + 0.003), i % 2 === 0 ? '#1a1a1a' : '#ffffff'));
+        break;
+      case 'rollbar':
+        for (const side of [-1, 1]) parts.push(box(0.03, 0.26, 0.03, x(-0.3), 0.45, side * W * 0.4, '#2b2f1c'));
+        parts.push(box(0.03, 0.03, W * 0.8, x(-0.3), 0.58, 0, '#2b2f1c'));
+        break;
+      case 'bed':
+        parts.push(box(L * 0.34, 0.04, W * 0.8, x(-0.28), 0.33, 0, spec.accent));
+        break;
+      case 'eyes':
+        for (const side of [-1, 1]) parts.push(box(0.05, 0.05, 0.05, x(0.2), 0.58, side * 0.12, '#ffffff'));
+        break;
+      default:
+        break;
+    }
+  }
   return merge(parts);
 }

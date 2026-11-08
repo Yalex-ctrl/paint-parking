@@ -54,7 +54,6 @@ import { activeLimit, recomputeStars, starsFor } from '@/game/scoring';
 import { optimalOf } from '@/game/levels';
 import { tutorialFor } from '@/game/mechanics';
 import type { Dir, Level, Tutorial } from '@/game/types';
-import { createRng } from '@/core/rng';
 import { isDailyLevelId } from '@/core/worlds';
 
 /** The header takes three rows (see components/LevelHud.tsx), then the bar of the stars. */
@@ -242,9 +241,8 @@ export default function GameScreen() {
     };
     run.scene.onEvent = (e) => sounds[e]();
     // The vehicle with the crown leaves a trail of the equipped paint.
-    const crowned = createRng(run.level.seed).int(0, run.level.vehicles.length - 1);
     const palette = particlePalette(profile.equipped.paint, 0xff5468);
-    run.scene.setTrailColor(crowned, `#${palette[0].toString(16).padStart(6, '0')}`);
+    run.scene.setTrailColor(run.scene.player, `#${palette[0].toString(16).padStart(6, '0')}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run]);
 
@@ -611,6 +609,7 @@ export default function GameScreen() {
               margins={margins}
               active={focused}
               decor={settings?.decor ?? true}
+              skin={profile.equipped.ball}
               onReady={() => markReady('/')}
             />
           )}

@@ -81,7 +81,7 @@ describe('midnight', () => {
   it('starts every counter of the day again, and keeps the progress of the unlock and a running trial', () => {
     let p = defaultProfile();
     p = rolloverRewards(p, '2026-05-10');
-    p = { ...withPlay(p, 1900), rewards: { ...withPlay(p, 1900).rewards, chestsOpened: [0], spins: 2, adsToday: 12, adBonusTaken: [0], trialsToday: 3, freeCoins: { count: 4, lastAt: 5 }, unlock: { index: 1, ads: 6, lastAt: 9, won: ['prism'] }, trial: { itemId: 'silver', kind: 'ball', levelsLeft: 2, restore: 'gold' } } };
+    p = { ...withPlay(p, 1900), rewards: { ...withPlay(p, 1900).rewards, chestsOpened: [0], spins: 2, adsToday: 12, adBonusTaken: [0], trialsToday: 3, freeCoins: { count: 4, lastAt: 5 }, unlock: { index: 1, ads: 6, lastAt: 9, won: ['iceCreamTruck'] }, trial: { itemId: 'carBlue', kind: 'ball', levelsLeft: 2, restore: 'carRed' } } };
     expect(rolloverRewards(p, '2026-05-10')).toBe(p); // the same day: nothing changes
     const next = rolloverRewards(p, '2026-05-11');
     expect(next.rewards.day).toBe('2026-05-11');
@@ -92,8 +92,8 @@ describe('midnight', () => {
     expect(next.rewards.adBonusTaken).toEqual([]);
     expect(next.rewards.trialsToday).toBe(0);
     expect(next.rewards.freeCoins).toEqual({ count: 0, lastAt: 0 });
-    expect(next.rewards.unlock).toEqual({ index: 1, ads: 6, lastAt: 9, won: ['prism'] });
-    expect(next.rewards.trial?.itemId).toBe('silver');
+    expect(next.rewards.unlock).toEqual({ index: 1, ads: 6, lastAt: 9, won: ['iceCreamTruck'] });
+    expect(next.rewards.trial?.itemId).toBe('carBlue');
   });
 
   it('a chest that was not opened is lost with the day', () => {
@@ -298,7 +298,7 @@ describe('trying a ball or a paint', () => {
       }
     }
     expect(ended).toEqual({ itemId: item.id });
-    expect(p.equipped.ball).toBe('gold'); // back as it was
+    expect(p.equipped.ball).toBe('carRed'); // back as it was
     expect(p.rewards.trial).toBeNull();
   });
 

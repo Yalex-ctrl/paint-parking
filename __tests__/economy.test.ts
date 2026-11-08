@@ -36,9 +36,9 @@ describe('profile', () => {
 
   it('normalizes partial or old saves, and never leaves an unowned item equipped', () => {
     expect(normalizeProfile(null)).toEqual(defaultProfile());
-    const p = normalizeProfile({ coins: 12, owned: ['silver'], equipped: { ball: 'donut', paint: 'neon' } });
+    const p = normalizeProfile({ coins: 12, owned: ['carBlue'], equipped: { ball: 'jeep', paint: 'neon' } });
     expect(p.coins).toBe(12);
-    expect(p.owned).toEqual(expect.arrayContaining([DEFAULT_BALL, DEFAULT_PAINT, 'silver']));
+    expect(p.owned).toEqual(expect.arrayContaining([DEFAULT_BALL, DEFAULT_PAINT, 'carBlue']));
     expect(p.equipped).toEqual({ ball: DEFAULT_BALL, paint: DEFAULT_PAINT }); // donut / neon not owned
     expect(p.daily.streak).toBe(0); // missing sections come back with defaults
   });
@@ -138,21 +138,21 @@ describe('shop catalogue', () => {
 describe('buying and equipping', () => {
   it('buys with coins, then owns, then can equip', () => {
     const p = earnCoins(defaultProfile(), 2000);
-    const r = buyItem(p, 'silver');
+    const r = buyItem(p, 'carBlue');
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.profile.coins).toBe(2000 - itemById('silver')!.price!);
-    expect(owns(r.profile, 'silver')).toBe(true);
-    const equipped = equipItem(r.profile, 'silver')!;
-    expect(equipped.equipped.ball).toBe('silver');
+    expect(r.profile.coins).toBe(2000 - itemById('carBlue')!.price!);
+    expect(owns(r.profile, 'carBlue')).toBe(true);
+    const equipped = equipItem(r.profile, 'carBlue')!;
+    expect(equipped.equipped.ball).toBe('carBlue');
     expect(equipped.equipped.paint).toBe(DEFAULT_PAINT); // paint untouched
   });
 
   it('refuses when poor, when already owned, for exclusives, for free items and unknown ids', () => {
     const p = earnCoins(defaultProfile(), 100);
     expect(buyItem(p, 'metallic')).toEqual({ ok: false, reason: 'coins' });
-    expect(buyItem(p, 'gold')).toEqual({ ok: false, reason: 'owned' });
-    expect(buyItem(p, 'disco')).toEqual({ ok: false, reason: 'exclusive' });
+    expect(buyItem(p, 'carRed')).toEqual({ ok: false, reason: 'owned' });
+    expect(buyItem(p, 'firetruck')).toEqual({ ok: false, reason: 'exclusive' });
     expect(buyItem(p, 'nope')).toEqual({ ok: false, reason: 'unknown' });
     const bought = buyItem(earnCoins(p, 1000), 'pastel');
     expect(bought.ok).toBe(true);
@@ -161,11 +161,11 @@ describe('buying and equipping', () => {
 
   it('cannot equip what is not owned; granting is idempotent and ignores unknown ids', () => {
     const p = defaultProfile();
-    expect(equipItem(p, 'donut')).toBeNull();
-    const g = grantItem(p, 'moon');
-    expect(grantItem(g, 'moon')).toBe(g);
+    expect(equipItem(p, 'jeep')).toBeNull();
+    const g = grantItem(p, 'ambulance');
+    expect(grantItem(g, 'ambulance')).toBe(g);
     expect(grantItem(p, 'does-not-exist')).toBe(p);
-    expect(equipItem(g, 'moon')!.equipped.ball).toBe('moon');
+    expect(equipItem(g, 'ambulance')!.equipped.ball).toBe('ambulance');
   });
 });
 

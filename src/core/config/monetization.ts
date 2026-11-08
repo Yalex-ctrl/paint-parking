@@ -156,7 +156,7 @@ export const MONETIZATION = {
     perStreakDay: 0,
     maxCoins: 20,
     /** Streak lengths that unlock an exclusive ball skin. */
-    skinMilestones: { 7: 'disco', 30: 'crystal' } as Record<number, string>,
+    skinMilestones: { 7: 'firetruck', 30: 'goldCar' } as Record<number, string>,
     /** A missed day can be saved with one rewarded ad, once per streak. */
     saveStreakAdPlacement: 'save_streak',
   },
@@ -164,7 +164,7 @@ export const MONETIZATION = {
   /** Daily reward, a 7-day cycle. Day 7 is a skin if the player does not own it yet, else coins. */
   dailyReward: {
     coins: [10, 15, 20, 25, 30, 40] as number[],
-    day7Skin: 'moon',
+    day7Skin: 'ambulance',
     day7Coins: 100,
   },
 
@@ -202,7 +202,7 @@ export const MONETIZATION = {
       priceEur: 2.99,
       durationHours: 48,
       coins: 1500,
-      skins: ['planet', 'eye'],
+      skins: ['taxi', 'police'],
     },
     /**
      * Product ids are stable (they are the ids of the future RevenueCat configuration):
@@ -223,9 +223,9 @@ export const MONETIZATION = {
     /** Every price of the balls and paints (the base prices written in game/shopItems.ts are multiplied by this). */
     priceFactor: 3,
     /** Opening the chest of the map with this number gives this item (once). */
-    chestRewards: { 2: 'confetti', 4: 'sun', 6: 'galaxy', 8: 'lava' } as Record<number, string>,
+    chestRewards: { 2: 'confetti', 4: 'sunCar', 6: 'galaxy', 8: 'lavaCar' } as Record<number, string>,
     /** Finishing the last level of a world gives this item (once), by level number. */
-    worldEndRewards: { 25: 'bauble', 50: 'watercolor', 75: 'snow', 100: 'ice', 125: 'toxic' } as Record<number, string>,
+    worldEndRewards: { 25: 'baubleCar', 50: 'watercolor', 75: 'snowCar', 100: 'ice', 125: 'toxic' } as Record<number, string>,
   },
 
   /**
@@ -251,7 +251,7 @@ export const MONETIZATION = {
     adUnlock: {
       adsNeeded: 10,
       minIntervalMin: 10,
-      items: ['prism', 'nebula', 'prismatic'] as string[],
+      items: ['iceCreamTruck', 'rainbowCar', 'prismatic'] as string[],
     },
     /** The wheel of fortune: one free spin a day and one for a rewarded ad (VIP: both free). */
     wheel: {

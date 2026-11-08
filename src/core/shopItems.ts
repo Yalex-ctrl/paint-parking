@@ -34,7 +34,7 @@ export type ShopItem = {
   fresh?: boolean;
 };
 
-export const DEFAULT_BALL = 'gold';
+export const DEFAULT_BALL = 'carRed';
 export const DEFAULT_PAINT = 'classic';
 
 const chestOf = (id: string) => Object.entries(MONETIZATION.shop.chestRewards).find(([, v]) => v === id)?.[0];
@@ -54,70 +54,59 @@ function build(kind: ItemKind, rows: Row[]): ShopItem[] {
       chest: `Coffre n°${chestOf(id)} de la carte`,
       world: `Fin du niveau ${worldOf(id)}`,
       ads: 'Cadeaux : pubs récompensées',
-      vip: 'Pass VIP : une balle par mois',
+      vip: 'Pass VIP : un véhicule par mois',
     };
     const howArg = price === 'chest' ? chestOf(id) : price === 'world' ? worldOf(id) : undefined;
     return { ...item, exclusive: price, how: how[price], ...(howArg ? { howArg } : {}) };
   });
 }
 
+/**
+ * The vehicles (the items of kind 'ball': the kind keeps its old name inside the saves and the code, the player sees vehicles).
+ * Each id has its look in render/skinSpecs.ts.
+ */
 const BALLS: Row[] = [
-  // The first balls of the game
-  ['gold', 'Or', 'common', 0],
-  ['silver', 'Argent', 'common', 350],
-  ['glass', 'Bille de verre', 'rare', 1150],
-  ['basketball', 'Basket', 'common', 400],
-  ['football', 'Ballon de foot', 'common', 450],
-  ['watermelon', 'Pastèque', 'common', 450],
-  ['donut', 'Donut', 'rare', 1050],
-  ['planet', 'Planète', 'epic', 'starter'],
-  ['eye', 'Œil', 'epic', 'starter'],
-  ['bowling', 'Boule de bowling', 'epic', 3000],
-  ['moon', 'Lune', 'rare', 'day7'],
-  ['disco', 'Disco', 'epic', 'streak7'],
-  ['crystal', 'Cristal', 'legendary', 'streak30'],
-  // Faceted gems
-  ['ruby', 'Rubis', 'rare', 1300, true],
-  ['emerald', 'Émeraude', 'rare', 1300, true],
-  ['sapphire', 'Saphir', 'rare', 1300, true],
-  ['amethyst', 'Améthyste', 'rare', 1350, true],
-  ['diamond', 'Diamant', 'legendary', 10000, true],
-  // Materials
-  ['bronze', 'Bronze', 'common', 350, true],
-  ['copper', 'Cuivre', 'common', 400, true],
-  ['pearl', 'Perle', 'rare', 1150, true],
-  ['obsidian', 'Obsidienne', 'epic', 2600, true],
-  ['marble', 'Marbre', 'common', 450, true],
-  ['wood', 'Bois verni', 'common', 350, true],
-  ['granite', 'Granit', 'common', 450, true],
-  // Sports
-  ['tennis', 'Tennis', 'common', 350, true],
-  ['golf', 'Golf', 'common', 350, true],
-  ['volley', 'Volley', 'common', 450, true],
-  ['eight', 'Billard n°8', 'rare', 1050, true],
-  ['baseball', 'Baseball', 'common', 450, true],
-  ['pingpong', 'Ping-pong', 'common', 300, true],
-  // Treats
-  ['orange', 'Orange', 'common', 400, true],
-  ['tomato', 'Tomate', 'common', 350, true],
-  ['cookie', 'Cookie', 'rare', 1000, true],
-  ['strawberry', 'Glace fraise', 'rare', 1150, true],
-  ['candy', 'Sucre d’orge', 'epic', 2900, true],
-  ['blueberry', 'Myrtille', 'common', 450, true],
-  // Cosmos
-  ['sun', 'Soleil', 'legendary', 'chest', true],
-  ['mars', 'Mars', 'epic', 2900, true],
-  ['jupiter', 'Jupiter', 'epic', 3200, true],
-  ['lava', 'Lave', 'legendary', 'chest', true],
-  // Fun
-  ['snow', 'Boule de neige', 'rare', 'world', true],
-  ['ladybug', 'Coccinelle', 'rare', 1200, true],
-  ['checker', 'Damier', 'rare', 1350, true],
-  ['bauble', 'Boule de Noël', 'epic', 'world', true],
-  // Won with the rewarded ads of the Cadeaux panel
-  ['prism', 'Prisme', 'epic', 'ads', true],
-  ['nebula', 'Nébuleuse', 'epic', 'ads', true],
-  // The twelve balls of the VIP pass
+  ['carRed', 'Citadine rouge', 'common', 0],
+  ['carBlue', 'Citadine bleue', 'common', 350, true],
+  ['carYellow', 'Citadine jaune', 'common', 350, true],
+  ['carGreen', 'Citadine verte', 'common', 350, true],
+  ['carWhite', 'Citadine blanche', 'common', 300, true],
+  ['carBlack', 'Citadine noire', 'common', 400, true],
+  ['carOrange', 'Citadine orange', 'common', 350, true],
+  ['carPink', 'Citadine rose', 'common', 400, true],
+  ['carPurple', 'Citadine violette', 'common', 400, true],
+  ['carTeal', 'Citadine turquoise', 'common', 350, true],
+  ['cloudCar', 'Citadine nuage', 'common', 400, true],
+  ['pickup', 'Pick-up', 'common', 450, true],
+  ['van', 'Van', 'common', 500, true],
+  ['jeep', 'Jeep', 'common', 500, true],
+  ['beetle', 'Coccinelle rétro', 'rare', 1100, true],
+  ['taxi', 'Taxi', 'epic', 'starter', true],
+  ['police', 'Voiture de police', 'epic', 'starter', true],
+  ['ambulance', 'Ambulance', 'rare', 'day7', true],
+  ['firetruck', 'Camion de pompiers', 'epic', 'streak7', true],
+  ['iceCreamTruck', 'Camion de glace', 'epic', 'ads', true],
+  ['racer', 'Voiture de course', 'rare', 1250, true],
+  ['goldCar', 'Voiture dorée', 'legendary', 'streak30', true],
+  ['chromeCar', 'Voiture chromée', 'legendary', 10000, true],
+  ['neonCar', 'Voiture néon', 'legendary', 9000, true],
+  ['sunCar', 'Voiture soleil', 'legendary', 'chest', true],
+  ['lavaCar', 'Voiture lave', 'legendary', 'chest', true],
+  ['camoCar', 'Camouflage', 'rare', 1350, true],
+  ['zebraCar', 'Zèbre', 'rare', 1150, true],
+  ['leopardCar', 'Léopard', 'rare', 1300, true],
+  ['flameCar', 'Flammes', 'epic', 3000, true],
+  ['candyCar', 'Bonbon', 'epic', 2900, true],
+  ['galaxyCar', 'Galaxie', 'epic', 3400, true],
+  ['rainbowCar', 'Arc-en-ciel', 'epic', 'ads', true],
+  ['ladybugCar', 'Coccinelle', 'rare', 1200, true],
+  ['beeCar', 'Abeille', 'common', 450, true],
+  ['watermelonCar', 'Pastèque', 'common', 450, true],
+  ['pumpkinCar', 'Citrouille', 'rare', 1050, true],
+  ['robotCar', 'Robot', 'epic', 2600, true],
+  ['baubleCar', 'Boule de Noël', 'epic', 'world', true],
+  ['snowCar', 'Voiture des neiges', 'rare', 'world', true],
+  // The twelve vehicles of the VIP pass, one a month
   ['vipAurora', 'Aurore', 'epic', 'vip', true],
   ['vipCoral', 'Corail', 'epic', 'vip', true],
   ['vipDeepSea', 'Grand bleu', 'epic', 'vip', true],

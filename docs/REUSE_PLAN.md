@@ -52,7 +52,7 @@ Règle : `src/core` n'importe jamais `src/game`. (Quelques fichiers de `core` on
 
 ## Dette connue (à traiter pendant le portage)
 
-- `core/shopItems.ts`, `core/dailyLoadout.ts`, `core/storage/profile.ts` parlent encore de « balle » (`ball`, `equipped.ball`) : à renommer en véhicule avec les ~40 skins.
+- `core/shopItems.ts`, `core/dailyLoadout.ts`, `core/storage/profile.ts` gardent le mot technique `ball` (`kind: 'ball'`, `equipped.ball`) : les textes disent « véhicule », le renommage des champs est une migration de sauvegarde à faire un jour.
 - `core/worlds.ts`, `core/gallery.ts` : mondes, noms et décors repris du labyrinthe ; la logique est générique, les noms et les décors seront revus avec le rendu.
 - `core/soundRules.ts` contient encore des règles de sons de toboggan à remplacer par les sons du parking.
 - `core/render/useThumbnail.ts` est un bouchon (les vignettes de la boutique sont vides), `render/ShopPreview.tsx` et `screens/GameScreen.tsx` sont des écrans provisoires.
@@ -72,6 +72,6 @@ Règle : `src/core` n'importe jamais `src/game`. (Quelques fichiers de `core` on
 | Vrais modèles Kenney Car Kit | à faire à la main : le site renvoie 403 aux téléchargements automatiques |
 | HUD et écran de jeu, gestes, indice, aide niveaux 1-5, vies, série, résultat, défi du jour | fait (`src/screens/GameScreen.tsx`), jamais lancé sur un téléphone |
 | Visite guidée adaptée au parking, coffre de fin d'étape, galerie à l'écran de résultat | à faire |
-| Boutique « Véhicules » (~40 skins), peintures sur la traînée | à faire |
+| Boutique « Véhicules » : 40 véhicules + 12 du Pass VIP (noms FR/EN, raretés et prix de Paint Maze), skin porté par le véhicule à couronne, aperçu 3D qui tourne, vignettes dessinées en code, peinture équipée sur la traînée | fait, jamais lancé sur un téléphone (le type d'objet s'appelle encore `ball` dans les sauvegardes et le code, le joueur voit « véhicule ») |
 | Sons du parking | à faire |
 | Mesures de performance en build optimisé | à faire (rien à mesurer avant le rendu) |

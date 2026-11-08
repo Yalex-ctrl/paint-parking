@@ -37,8 +37,8 @@
     "subscribe": "Subscribe",
     "subscribeFor": "Subscribe · {{price}} {{period}}",
     "trial": "{{count}} days free, then {{price}} {{period}}",
-    "ballOfMonth": "Ball of the month: {{name}}",
-    "ballNext": "Your next exclusive ball: {{name}}",
+    "ballOfMonth": "Vehicle of the month: {{name}}",
+    "ballNext": "Your next exclusive vehicle: {{name}}",
     "headline": "Play without limits",
     "benefit": {
       "noAds": "No more forced ads",
@@ -47,7 +47,7 @@
       "coinsSub": "Grab them in Gifts, every single day.",
       "lives": "Unlimited lives",
       "livesSub": "Replay as much as you like, no waiting.",
-      "ball": "An exclusive ball every month",
+      "ball": "An exclusive vehicle every month",
       "ballSub": "They stay yours, even if you stop.",
       "spin": "A 2nd free wheel spin",
       "spinSub": "Every day, no ad needed."
@@ -67,7 +67,7 @@
     "restoreDone": "VIP Pass restored!",
     "restoreNone": "No subscription to restore.",
     "welcome": "Welcome to the VIP Pass!",
-    "ballToast": "New VIP ball unlocked 🎉",
+    "ballToast": "New VIP vehicle unlocked 🎉",
     "simulated": {
       "title": "Simulated subscription",
       "body": "{{plan}} ({{id}})\n\n(No real payment: this is a simulation for Expo Go.)"
@@ -81,14 +81,14 @@
     },
     "offer": {
       "title": "VIP Pass",
-      "sub": "No forced ads, {{count}} coins a day, unlimited lives and an exclusive ball every month.",
+      "sub": "No forced ads, {{count}} coins a day, unlimited lives and an exclusive vehicle every month.",
       "cta": "Discover",
       "from": "From {{price}} / month"
     },
     "livesLink": "Unlimited lives with the VIP Pass",
     "expired": {
       "title": "Your VIP Pass has expired",
-      "body": "Your VIP balls are still yours. Come back whenever you like to get all the perks back.",
+      "body": "Your VIP vehicles are still yours. Come back whenever you like to get all the perks back.",
       "renew": "Renew",
       "dismiss": "Later"
     },
@@ -103,9 +103,9 @@
       "renews": "Renews on {{date}}",
       "endsOn": "Ends on {{date}}",
       "manage": "Manage my subscription",
-      "balls": "My VIP balls",
+      "balls": "My VIP vehicles",
       "ballsCount": "{{given}} / {{total}} unlocked",
-      "nextBall": "Next ball: {{name}}",
+      "nextBall": "Next vehicle: {{name}}",
       "benefits": "Your perks",
       "discover": "Discover the VIP Pass",
       "renewsIn": "Renews in"
@@ -132,7 +132,7 @@
   "daily": {
     "reward": {
       "kicker": "DAILY REWARD",
-      "newBall": "New ball: {{name}}!"
+      "newBall": "New vehicle: {{name}}!"
     },
     "kicker": "DAILY CHALLENGE",
     "theme": "Lot: {{name}}",
@@ -147,7 +147,7 @@
     "canSave": "You missed a day: your {{count}}-day streak can be saved (just once).",
     "saveStreak": "Save my streak",
     "play": "Play the challenge",
-    "exclusiveBalls": "Exclusive balls",
+    "exclusiveBalls": "Exclusive vehicles",
     "milestone_one": "{{name}} · {{count}}-day streak",
     "milestone_other": "{{name}} · {{count}}-day streak",
     "newIn": "New challenge in",
@@ -173,14 +173,14 @@
       "lives": "You have 5 lives. You lose one when you fail. They come back on their own, one every 30 minutes.",
       "streak": "Chain your wins: your coins are multiplied up to ×2!",
       "coins": "Your coins. Earn them by playing, spend them in the shop.",
-      "shopBalls": "Over {{balls}} balls to unlock.",
+      "shopBalls": "Over {{balls}} vehicles to unlock.",
       "shopPaints": "…and over {{paints}} paints to paint in style!",
       "shopOffers": "And here are the offers of the shop.",
       "offersFree": "Watch a short ad to earn free coins, several times a day.",
       "offersPacks": "Need more coins? The big packs give you much more for your money.",
       "offersLives": "More lives? Play without limits for 1 h or 24 h.",
       "offersPiggy": "Your piggy bank fills up by itself as you play. Break it to take everything inside!",
-      "offersVip": "The VIP Pass: no forced ads, 100 coins a day and an exclusive ball every month.",
+      "offersVip": "The VIP Pass: no forced ads, 100 coins a day and an exclusive vehicle every month.",
       "daily": "A special level every day. Don’t break your streak!",
       "dailyCalendar": "Every day you clear is ticked in the calendar.",
       "gallery": "Your wins reveal pictures to collect.",
@@ -216,7 +216,7 @@
     },
     "starter": {
       "title": "Starter pack",
-      "description": "{{coins}} coins + 2 exclusive balls."
+      "description": "{{coins}} coins + 2 exclusive vehicles."
     },
     "livesDay": {
       "title": "Unlimited lives 24 h",
@@ -229,9 +229,9 @@
     "coins": {
       "title": "{{amount}} coins",
       "blurb": {
-        "common": "Enough to treat yourself to a common ball.",
-        "rare": "Enough for a rare ball, and more.",
-        "epic": "Enough for an epic ball, and even more."
+        "common": "Enough to treat yourself to a common vehicle.",
+        "rare": "Enough for a rare vehicle, and more.",
+        "epic": "Enough for an epic vehicle, and even more."
       }
     },
     "livesHour": {
@@ -257,7 +257,7 @@
       "best": "Best value"
     },
     "tab": {
-      "ball": "Balls",
+      "ball": "Vehicles",
       "paint": "Paints",
       "offers": "Offers"
     },
@@ -283,7 +283,7 @@
       "chest": "Map chest #{{n}}",
       "world": "End of level {{n}}",
       "ads": "Gifts: rewarded ads",
-      "vip": "VIP Pass: one ball a month"
+      "vip": "VIP Pass: one vehicle a month"
     },
     "empty": "Nothing here yet.",
     "equipped": "Equipped",
@@ -344,7 +344,7 @@
     "starter": {
       "kicker": "STARTER OFFER",
       "title": "Starter pack",
-      "body": "Two exclusive balls: {{names}}"
+      "body": "Two exclusive vehicles: {{names}}"
     },
     "hint": {
       "title": "A hint?",
@@ -389,7 +389,7 @@
     "lost": {
       "levels": "all your levels and stars",
       "coins": "your coins and your piggy bank",
-      "items": "the balls and paints bought with coins",
+      "items": "the vehicles and paints bought with coins",
       "daily": "your daily challenge and your streak",
       "rewards": "your daily reward, your gallery and your chests",
       "tutorials": "the tutorials you’ve seen and the starter pack countdown"
@@ -406,7 +406,7 @@
   "trial": {
     "badge_one": "Trial: {{count}} level left",
     "badge_other": "Trial: {{count}} levels left",
-    "likedBall": "Did you like the {{name}} ball?",
+    "likedBall": "Did you like the {{name}} vehicle?",
     "likedPaint": "Did you like the {{name}} paint?",
     "missing": "{{amount}} coins short",
     "seeOffers": "See the offers",
@@ -416,82 +416,23 @@
   "loading": {
     "tipLabel": "TIP",
     "tips": {
-      "minimum": "Tip: the minimum number of moves earns 3 ★.",
-      "bends": "Bends don’t stop you.",
+      "minimum": "Tip: no collision earns 3 ★.",
+      "bends": "A vehicle can leave by its front or by its back.",
       "streak": "A win streak multiplies your coins.",
       "piggy": "Your piggy bank fills up on its own when you win.",
-      "stop": "A stop tile halts the ball dead.",
-      "portals": "Teleporters keep your direction.",
-      "fragile": "A fragile wall breaks on the first hit.",
-      "bomb": "The paint bomb colors the tiles around it.",
+      "stop": "Obstacles never move: drive around them.",
+      "portals": "Trucks are longer: make room for them.",
+      "fragile": "The barrier opens once enough cars have left.",
+      "bomb": "Follow the arrows painted on the ground.",
       "lives": "Lives come back on their own, one every 30 minutes.",
       "hint": "A hint shows you the next good move.",
       "daily": "The daily challenge never costs a life.",
-      "exit": "Paint the whole floor: then the exit opens."
+      "exit": "Empty the lot: every vehicle leaves its paint behind."
     }
   },
   "items": {
-    "ballOf": "{{name}} ball",
+    "ballOf": "{{name}} vehicle",
     "paintOf": "{{name}} paint",
-    "gold": "Gold",
-    "silver": "Silver",
-    "glass": "Glass marble",
-    "basketball": "Basketball",
-    "football": "Football",
-    "watermelon": "Watermelon",
-    "donut": "Donut",
-    "planet": "Planet",
-    "eye": "Eye",
-    "bowling": "Bowling ball",
-    "moon": "Moon",
-    "disco": "Disco",
-    "crystal": "Crystal",
-    "ruby": "Ruby",
-    "emerald": "Emerald",
-    "sapphire": "Sapphire",
-    "amethyst": "Amethyst",
-    "diamond": "Diamond",
-    "bronze": "Bronze",
-    "copper": "Copper",
-    "pearl": "Pearl",
-    "obsidian": "Obsidian",
-    "marble": "Marble",
-    "wood": "Polished wood",
-    "granite": "Granite",
-    "tennis": "Tennis",
-    "golf": "Golf",
-    "volley": "Volleyball",
-    "eight": "Eight ball",
-    "baseball": "Baseball",
-    "pingpong": "Ping-pong",
-    "orange": "Orange",
-    "tomato": "Tomato",
-    "cookie": "Cookie",
-    "strawberry": "Strawberry ice cream",
-    "candy": "Candy cane",
-    "blueberry": "Blueberry",
-    "sun": "Sun",
-    "mars": "Mars",
-    "jupiter": "Jupiter",
-    "lava": "Lava",
-    "snow": "Snowball",
-    "ladybug": "Ladybug",
-    "checker": "Checkerboard",
-    "bauble": "Christmas bauble",
-    "prism": "Prism",
-    "nebula": "Nebula",
-    "vipAurora": "Aurora",
-    "vipCoral": "Coral",
-    "vipDeepSea": "Deep blue",
-    "vipRuby": "Royal ruby",
-    "vipBonfire": "Bonfire",
-    "vipMint": "Frosty mint",
-    "vipAmethyst": "Imperial amethyst",
-    "vipRose": "Rose gold",
-    "vipNight": "Starry night",
-    "vipOpal": "Opal",
-    "vipEmerald": "Imperial emerald",
-    "vipPlatinum": "Platinum",
     "classic": "Classic",
     "pastel": "Pastel",
     "glitter": "Glitter",
@@ -528,7 +469,59 @@
     "fire": "Fire",
     "toxic": "Toxic",
     "confetti": "Confetti",
-    "prismatic": "Prismatic"
+    "prismatic": "Prismatic",
+    "carRed": "Red city car",
+    "carBlue": "Blue city car",
+    "carYellow": "Yellow city car",
+    "carGreen": "Green city car",
+    "carWhite": "White city car",
+    "carBlack": "Black city car",
+    "carOrange": "Orange city car",
+    "carPink": "Pink city car",
+    "carPurple": "Purple city car",
+    "carTeal": "Teal city car",
+    "cloudCar": "Cloud city car",
+    "pickup": "Pickup",
+    "van": "Van",
+    "jeep": "Jeep",
+    "beetle": "Retro beetle",
+    "taxi": "Taxi",
+    "police": "Police car",
+    "ambulance": "Ambulance",
+    "firetruck": "Fire truck",
+    "iceCreamTruck": "Ice cream truck",
+    "racer": "Race car",
+    "goldCar": "Golden car",
+    "chromeCar": "Chrome car",
+    "neonCar": "Neon car",
+    "sunCar": "Sun car",
+    "lavaCar": "Lava car",
+    "camoCar": "Camouflage",
+    "zebraCar": "Zebra",
+    "leopardCar": "Leopard",
+    "flameCar": "Flames",
+    "candyCar": "Candy",
+    "galaxyCar": "Galaxy",
+    "rainbowCar": "Rainbow",
+    "ladybugCar": "Ladybug",
+    "beeCar": "Bee",
+    "watermelonCar": "Watermelon",
+    "pumpkinCar": "Pumpkin",
+    "robotCar": "Robot",
+    "baubleCar": "Christmas bauble",
+    "snowCar": "Snow car",
+    "vipAurora": "Aurora",
+    "vipCoral": "Coral",
+    "vipDeepSea": "Deep sea",
+    "vipRuby": "Royal ruby",
+    "vipBonfire": "Bonfire",
+    "vipMint": "Frosted mint",
+    "vipAmethyst": "Imperial amethyst",
+    "vipRose": "Rose gold",
+    "vipNight": "Starry night",
+    "vipOpal": "Opal",
+    "vipEmerald": "Imperial emerald",
+    "vipPlatinum": "Platinum"
   },
   "gallery": {
     "done_one": "{{count}} picture complete",
@@ -656,7 +649,7 @@
     "music": "Music",
     "musicHint": "The background music.",
     "vibrations": "Vibrations",
-    "vibrationsHint": "Haptic feedback when the ball stops or hits a wall.",
+    "vibrationsHint": "Haptic feedback when a vehicle hits another.",
     "notifications": "Notifications",
     "notificationsHint": "One reminder a day, around 6 pm, for your challenge or your streak.",
     "decor": "Scenery",
@@ -759,8 +752,8 @@
     "hours_other": "{{count}} h",
     "vipActive": "VIP Pass active · renews on {{date}}",
     "banner": {
-      "vip": "No ads, {{count}} coins a day, unlimited lives and an exclusive ball every month.",
-      "starter": "{{coins}} coins + 2 exclusive balls. One time only!",
+      "vip": "No ads, {{count}} coins a day, unlimited lives and an exclusive vehicle every month.",
+      "starter": "{{coins}} coins + 2 exclusive vehicles. One time only!",
       "piggy": "{{amount}} coins are waiting. Break it!"
     }
   }

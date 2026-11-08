@@ -50,12 +50,12 @@ describe('reset of the progress', () => {
     await AsyncStorage.setItem(KEYS.mapSeen, '5');
     await AsyncStorage.setItem(KEYS.oldWallet, JSON.stringify({ coins: 9, collected: {} }));
     updateProfile((p) => earnCoins(p, 5000));
-    const bought = buyItem(getProfile(), 'silver');
+    const bought = buyItem(getProfile(), 'carBlue');
     if (bought.ok) updateProfile(() => bought.profile);
     updateProfile((p) => completeDaily(p, '2026-04-01').profile);
     updateProfile((p) => ({
       ...p,
-      equipped: { ball: 'silver', paint: p.equipped.paint },
+      equipped: { ball: 'carBlue', paint: p.equipped.paint },
       chestsOpened: [1, 2],
       mapCoins: { day: '2026-04-01', count: 7 },
       handSeen: true,
@@ -100,7 +100,7 @@ describe('reset of the progress', () => {
     expect(p.starter.purchased).toBe(true);
     for (const id of MONETIZATION.products.starterPack.skins) expect(owns(p, id)).toBe(true);
     expect(p.coins).toBe(0); // the pack's coins were spent / are progress
-    expect(owns(p, 'silver')).toBe(false); // bought with coins: gone
+    expect(owns(p, 'carBlue')).toBe(false); // bought with coins: gone
     // The other preferences stay; the sound switches and volumes are back to their defaults.
     expect(await loadSettings()).toEqual({ decor: false, sound: true, music: true, musicVolume: 0.8, sfxVolume: 0.8, showPerf: false, vibrations: false, language: null });
     expect(await AsyncStorage.getItem(KEYS.mockReceipts)).toBe(JSON.stringify(['paintparking_no_ads']));

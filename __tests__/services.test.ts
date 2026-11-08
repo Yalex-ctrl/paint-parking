@@ -116,7 +116,7 @@ describe('purchases (mock)', () => {
     expect(getProfile().coins).toBe(3000);
     expect(await purchaseProduct('paintparking_starter_pack')).toBe(true);
     expect(getProfile().coins).toBe(4500);
-    expect(owns(getProfile(), 'planet')).toBe(true);
+    expect(owns(getProfile(), 'taxi')).toBe(true);
   });
 
   it('changes nothing when the player cancels or the purchase fails', async () => {
@@ -132,7 +132,7 @@ describe('purchases (mock)', () => {
     expect(await restorePurchases()).toEqual(['paintparking_no_ads', 'paintparking_starter_pack', 'paintparking_coins_1000']);
     expect(getProfile().adsRemoved).toBe(true);
     expect(getProfile().coins).toBe(0);
-    expect(owns(getProfile(), 'eye')).toBe(true);
+    expect(owns(getProfile(), 'police')).toBe(true);
   });
 });
 

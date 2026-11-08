@@ -159,18 +159,18 @@ describe('exclusive skins of the streak', () => {
   it('unlocks the disco ball at 7 days and the crystal ball at 30, once', () => {
     const days7 = Array.from({ length: 7 }, (_, i) => day(i));
     const p7 = playDays(days7);
-    expect(owns(p7, 'disco')).toBe(true);
-    expect(owns(p7, 'crystal')).toBe(false);
-    expect(completeDaily(playDays(days7.slice(0, 6)), day(6)).skin).toBe('disco');
+    expect(owns(p7, 'firetruck')).toBe(true);
+    expect(owns(p7, 'goldCar')).toBe(false);
+    expect(completeDaily(playDays(days7.slice(0, 6)), day(6)).skin).toBe('firetruck');
 
     const days30 = Array.from({ length: 30 }, (_, i) => day(i));
     const p30 = playDays(days30);
-    expect(owns(p30, 'crystal')).toBe(true);
-    expect(completeDaily(playDays(days30.slice(0, 29)), day(29)).skin).toBe('crystal');
+    expect(owns(p30, 'goldCar')).toBe(true);
+    expect(completeDaily(playDays(days30.slice(0, 29)), day(29)).skin).toBe('goldCar');
   });
 
   it('does not unlock a skin the player already owns', () => {
-    const owner = grantItem(defaultProfile(), 'disco');
+    const owner = grantItem(defaultProfile(), 'firetruck');
     const days7 = Array.from({ length: 7 }, (_, i) => day(i));
     expect(completeDaily(playDays(days7.slice(0, 6), owner), day(6)).skin).toBeNull();
   });
@@ -218,8 +218,8 @@ describe('daily reward (7-day cycle)', () => {
     for (let i = 0; i < 6; i++) p = claimDailyReward(p, day(i))!.profile;
     const seventh = claimDailyReward(p, day(6))!;
     expect(seventh.day).toBe(7);
-    expect(seventh.reward).toEqual({ coins: 0, skin: 'moon' });
-    expect(owns(seventh.profile, 'moon')).toBe(true);
+    expect(seventh.reward).toEqual({ coins: 0, skin: 'ambulance' });
+    expect(owns(seventh.profile, 'ambulance')).toBe(true);
     // Next cycle: day 7 is coins now.
     let q = seventh.profile;
     for (let i = 7; i < 13; i++) q = claimDailyReward(q, day(i))!.profile;
@@ -253,7 +253,7 @@ describe('daily reward (7-day cycle)', () => {
     for (let i = 0; i < 6; i++) p = claimDailyReward(p, day(i))!.profile;
     const doubled7 = claimDailyReward(p, day(6), true)!;
     expect(doubled7.profile.coins).toBe(p.coins);
-    expect(owns(doubled7.profile, 'moon')).toBe(true);
+    expect(owns(doubled7.profile, 'ambulance')).toBe(true);
   });
 
   it('is not available again if the time zone moves back a day', () => {

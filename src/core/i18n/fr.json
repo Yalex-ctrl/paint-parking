@@ -37,8 +37,8 @@
     "subscribe": "S’abonner",
     "subscribeFor": "S’abonner · {{price}} {{period}}",
     "trial": "{{count}} jours gratuits, puis {{price}} {{period}}",
-    "ballOfMonth": "Balle du mois : {{name}}",
-    "ballNext": "Ta prochaine balle exclusive : {{name}}",
+    "ballOfMonth": "Véhicule du mois : {{name}}",
+    "ballNext": "Ton prochain véhicule exclusif : {{name}}",
     "headline": "Joue sans limites",
     "benefit": {
       "noAds": "Plus de pubs forcées",
@@ -47,7 +47,7 @@
       "coinsSub": "À récupérer dans Cadeaux, chaque jour.",
       "lives": "Vies infinies",
       "livesSub": "Rejoue autant que tu veux, sans attendre.",
-      "ball": "Une balle exclusive par mois",
+      "ball": "Un véhicule exclusif par mois",
       "ballSub": "Elles restent à toi, même si tu arrêtes.",
       "spin": "Un 2e tour de roue gratuit",
       "spinSub": "Chaque jour, sans pub."
@@ -67,7 +67,7 @@
     "restoreDone": "Pass VIP restauré !",
     "restoreNone": "Aucun abonnement à restaurer.",
     "welcome": "Bienvenue dans le Pass VIP !",
-    "ballToast": "Nouvelle balle VIP débloquée 🎉",
+    "ballToast": "Nouveau véhicule VIP débloqué 🎉",
     "simulated": {
       "title": "Abonnement simulé",
       "body": "{{plan}} ({{id}})\n\n(Aucun paiement réel : ceci est une simulation pour Expo Go.)"
@@ -81,14 +81,14 @@
     },
     "offer": {
       "title": "Pass VIP",
-      "sub": "Pas de pubs forcées, {{count}} pièces par jour, vies infinies et une balle exclusive par mois.",
+      "sub": "Pas de pubs forcées, {{count}} pièces par jour, vies infinies et un véhicule exclusif par mois.",
       "cta": "Découvrir",
       "from": "À partir de {{price}} / mois"
     },
     "livesLink": "Vies infinies avec le Pass VIP",
     "expired": {
       "title": "Ton Pass VIP a expiré",
-      "body": "Tes balles VIP restent à toi. Reviens quand tu veux pour retrouver tous les avantages.",
+      "body": "Tes véhicules VIP restent à toi. Reviens quand tu veux pour retrouver tous les avantages.",
       "renew": "Renouveler",
       "dismiss": "Plus tard"
     },
@@ -103,9 +103,9 @@
       "renews": "Se renouvelle le {{date}}",
       "endsOn": "Se termine le {{date}}",
       "manage": "Gérer mon abonnement",
-      "balls": "Mes balles VIP",
+      "balls": "Mes véhicules VIP",
       "ballsCount": "{{given}} / {{total}} débloquées",
-      "nextBall": "Prochaine balle : {{name}}",
+      "nextBall": "Prochain véhicule : {{name}}",
       "benefits": "Tes avantages",
       "discover": "Découvrir le Pass VIP",
       "renewsIn": "Renouvellement dans"
@@ -132,7 +132,7 @@
   "daily": {
     "reward": {
       "kicker": "RÉCOMPENSE QUOTIDIENNE",
-      "newBall": "Nouvelle balle : {{name}} !"
+      "newBall": "Nouveau véhicule : {{name}} !"
     },
     "kicker": "DÉFI DU JOUR",
     "theme": "Parking : {{name}}",
@@ -147,7 +147,7 @@
     "canSave": "Tu as raté un jour : ta série de {{count}} jours peut être sauvée (une seule fois).",
     "saveStreak": "Sauver ma série",
     "play": "Jouer le défi",
-    "exclusiveBalls": "Balles exclusives",
+    "exclusiveBalls": "Véhicules exclusifs",
     "milestone_one": "{{name}} · série de {{count}} jour",
     "milestone_other": "{{name}} · série de {{count}} jours",
     "newIn": "Nouveau défi dans",
@@ -173,14 +173,14 @@
       "lives": "Tu as 5 vies. Tu en perds une si tu échoues. Elles reviennent toutes seules, une toutes les 30 minutes.",
       "streak": "Enchaîne les victoires : tes pièces sont multipliées jusqu’à ×2 !",
       "coins": "Tes pièces. Gagne-les en jouant, dépense-les dans la boutique.",
-      "shopBalls": "Plus de {{balls}} balles à débloquer.",
+      "shopBalls": "Plus de {{balls}} véhicules à débloquer.",
       "shopPaints": "…et plus de {{paints}} peintures pour peindre en style !",
       "shopOffers": "Et voici les offres de la boutique.",
       "offersFree": "Regarde une courte pub pour gagner des pièces gratuites, plusieurs fois par jour.",
       "offersPacks": "Besoin de plus de pièces ? Les gros packs en donnent beaucoup plus pour ton argent.",
       "offersLives": "Plus de vies ? Joue sans limite pendant 1 h ou 24 h.",
       "offersPiggy": "Ta tirelire se remplit toute seule quand tu joues. Casse-la pour récupérer tout son contenu !",
-      "offersVip": "Le Pass VIP : plus de pubs forcées, 100 pièces par jour et une balle exclusive chaque mois.",
+      "offersVip": "Le Pass VIP : plus de pubs forcées, 100 pièces par jour et un véhicule exclusif chaque mois.",
       "daily": "Un niveau spécial chaque jour. Ne casse pas ta série !",
       "dailyCalendar": "Chaque jour réussi est coché dans le calendrier.",
       "gallery": "Tes victoires révèlent des tableaux à collectionner.",
@@ -216,7 +216,7 @@
     },
     "starter": {
       "title": "Pack de démarrage",
-      "description": "{{coins}} pièces + 2 balles exclusives."
+      "description": "{{coins}} pièces + 2 véhicules exclusifs."
     },
     "livesDay": {
       "title": "Vies infinies 24 h",
@@ -229,9 +229,9 @@
     "coins": {
       "title": "{{amount}} pièces",
       "blurb": {
-        "common": "De quoi t’offrir une balle commune.",
-        "rare": "Assez pour une balle rare, et plus.",
-        "epic": "Assez pour une balle épique, et plus encore."
+        "common": "De quoi t’offrir un véhicule commun.",
+        "rare": "Assez pour un véhicule rare, et plus.",
+        "epic": "Assez pour un véhicule épique, et plus encore."
       }
     },
     "livesHour": {
@@ -257,7 +257,7 @@
       "best": "Meilleure valeur"
     },
     "tab": {
-      "ball": "Balles",
+      "ball": "Véhicules",
       "paint": "Peintures",
       "offers": "Offres"
     },
@@ -283,7 +283,7 @@
       "chest": "Coffre n°{{n}} de la carte",
       "world": "Fin du niveau {{n}}",
       "ads": "Cadeaux : pubs récompensées",
-      "vip": "Pass VIP : une balle par mois"
+      "vip": "Pass VIP : un véhicule par mois"
     },
     "empty": "Rien ici pour l’instant.",
     "equipped": "Équipé",
@@ -344,7 +344,7 @@
     "starter": {
       "kicker": "OFFRE DE DÉPART",
       "title": "Pack de démarrage",
-      "body": "Deux balles exclusives : {{names}}"
+      "body": "Deux véhicules exclusifs : {{names}}"
     },
     "hint": {
       "title": "Un indice ?",
@@ -389,7 +389,7 @@
     "lost": {
       "levels": "tous tes niveaux et tes étoiles",
       "coins": "tes pièces et ta tirelire",
-      "items": "les balles et peintures achetées avec des pièces",
+      "items": "les véhicules et peintures achetés avec des pièces",
       "daily": "ton défi du jour et ta série",
       "rewards": "ta récompense quotidienne, ta galerie et tes coffres",
       "tutorials": "tes tutoriels vus et le compte à rebours du pack de démarrage"
@@ -406,7 +406,7 @@
   "trial": {
     "badge_one": "Essai : {{count}} niveau restant",
     "badge_other": "Essai : {{count}} niveaux restants",
-    "likedBall": "Tu as aimé la balle {{name}} ?",
+    "likedBall": "Tu as aimé le véhicule {{name}} ?",
     "likedPaint": "Tu as aimé la peinture {{name}} ?",
     "missing": "Il manque {{amount}} pièces",
     "seeOffers": "Voir les offres",
@@ -416,82 +416,23 @@
   "loading": {
     "tipLabel": "ASTUCE",
     "tips": {
-      "minimum": "Astuce : le minimum de coups donne 3 ★.",
-      "bends": "Les virages ne t’arrêtent pas.",
+      "minimum": "Astuce : zéro collision donne 3 ★.",
+      "bends": "Un véhicule peut sortir par l’avant ou par l’arrière.",
       "streak": "Une série de victoires multiplie tes pièces.",
       "piggy": "Ta tirelire se remplit toute seule quand tu gagnes.",
-      "stop": "Une case stop arrête la balle net.",
-      "portals": "Les téléporteurs gardent ta direction.",
-      "fragile": "Un mur fragile se brise au premier choc.",
-      "bomb": "La bombe de peinture colore les cases autour d’elle.",
+      "stop": "Un obstacle ne bouge jamais : contourne-le.",
+      "portals": "Les camions sont plus longs : libère-leur de la place.",
+      "fragile": "La barrière s’ouvre quand assez de voitures sont sorties.",
+      "bomb": "Respecte le sens des flèches peintes au sol.",
       "lives": "Les vies reviennent toutes seules, une toutes les 30 minutes.",
       "hint": "Un indice te montre le prochain bon geste.",
       "daily": "Le défi du jour ne coûte jamais de vie.",
-      "exit": "Peins tout le sol : la sortie s’ouvre alors."
+      "exit": "Vide le parking : chaque véhicule laisse sa peinture."
     }
   },
   "items": {
-    "ballOf": "Balle {{name}}",
+    "ballOf": "Véhicule {{name}}",
     "paintOf": "Peinture {{name}}",
-    "gold": "Or",
-    "silver": "Argent",
-    "glass": "Bille de verre",
-    "basketball": "Basket",
-    "football": "Ballon de foot",
-    "watermelon": "Pastèque",
-    "donut": "Donut",
-    "planet": "Planète",
-    "eye": "Œil",
-    "bowling": "Boule de bowling",
-    "moon": "Lune",
-    "disco": "Disco",
-    "crystal": "Cristal",
-    "ruby": "Rubis",
-    "emerald": "Émeraude",
-    "sapphire": "Saphir",
-    "amethyst": "Améthyste",
-    "diamond": "Diamant",
-    "bronze": "Bronze",
-    "copper": "Cuivre",
-    "pearl": "Perle",
-    "obsidian": "Obsidienne",
-    "marble": "Marbre",
-    "wood": "Bois verni",
-    "granite": "Granit",
-    "tennis": "Tennis",
-    "golf": "Golf",
-    "volley": "Volley",
-    "eight": "Billard n°8",
-    "baseball": "Baseball",
-    "pingpong": "Ping-pong",
-    "orange": "Orange",
-    "tomato": "Tomate",
-    "cookie": "Cookie",
-    "strawberry": "Glace fraise",
-    "candy": "Sucre d’orge",
-    "blueberry": "Myrtille",
-    "sun": "Soleil",
-    "mars": "Mars",
-    "jupiter": "Jupiter",
-    "lava": "Lave",
-    "snow": "Boule de neige",
-    "ladybug": "Coccinelle",
-    "checker": "Damier",
-    "bauble": "Boule de Noël",
-    "prism": "Prisme",
-    "nebula": "Nébuleuse",
-    "vipAurora": "Aurore",
-    "vipCoral": "Corail",
-    "vipDeepSea": "Grand bleu",
-    "vipRuby": "Rubis royal",
-    "vipBonfire": "Feu de joie",
-    "vipMint": "Menthe glacée",
-    "vipAmethyst": "Améthyste impériale",
-    "vipRose": "Or rose",
-    "vipNight": "Nuit étoilée",
-    "vipOpal": "Opale",
-    "vipEmerald": "Émeraude impériale",
-    "vipPlatinum": "Platine",
     "classic": "Classique",
     "pastel": "Pastel",
     "glitter": "Paillettes",
@@ -528,7 +469,59 @@
     "fire": "Feu",
     "toxic": "Toxique",
     "confetti": "Confettis",
-    "prismatic": "Prismatique"
+    "prismatic": "Prismatique",
+    "carRed": "Citadine rouge",
+    "carBlue": "Citadine bleue",
+    "carYellow": "Citadine jaune",
+    "carGreen": "Citadine verte",
+    "carWhite": "Citadine blanche",
+    "carBlack": "Citadine noire",
+    "carOrange": "Citadine orange",
+    "carPink": "Citadine rose",
+    "carPurple": "Citadine violette",
+    "carTeal": "Citadine turquoise",
+    "cloudCar": "Citadine nuage",
+    "pickup": "Pick-up",
+    "van": "Van",
+    "jeep": "Jeep",
+    "beetle": "Coccinelle rétro",
+    "taxi": "Taxi",
+    "police": "Voiture de police",
+    "ambulance": "Ambulance",
+    "firetruck": "Camion de pompiers",
+    "iceCreamTruck": "Camion de glace",
+    "racer": "Voiture de course",
+    "goldCar": "Voiture dorée",
+    "chromeCar": "Voiture chromée",
+    "neonCar": "Voiture néon",
+    "sunCar": "Voiture soleil",
+    "lavaCar": "Voiture lave",
+    "camoCar": "Camouflage",
+    "zebraCar": "Zèbre",
+    "leopardCar": "Léopard",
+    "flameCar": "Flammes",
+    "candyCar": "Bonbon",
+    "galaxyCar": "Galaxie",
+    "rainbowCar": "Arc-en-ciel",
+    "ladybugCar": "Coccinelle",
+    "beeCar": "Abeille",
+    "watermelonCar": "Pastèque",
+    "pumpkinCar": "Citrouille",
+    "robotCar": "Robot",
+    "baubleCar": "Boule de Noël",
+    "snowCar": "Voiture des neiges",
+    "vipAurora": "Aurore",
+    "vipCoral": "Corail",
+    "vipDeepSea": "Grand bleu",
+    "vipRuby": "Rubis royal",
+    "vipBonfire": "Feu de joie",
+    "vipMint": "Menthe glacée",
+    "vipAmethyst": "Améthyste impériale",
+    "vipRose": "Or rose",
+    "vipNight": "Nuit étoilée",
+    "vipOpal": "Opale",
+    "vipEmerald": "Émeraude impériale",
+    "vipPlatinum": "Platine"
   },
   "gallery": {
     "done_one": "{{count}} tableau terminé",
@@ -656,7 +649,7 @@
     "music": "Musique",
     "musicHint": "La musique d’ambiance.",
     "vibrations": "Vibrations",
-    "vibrationsHint": "Retour tactile quand la balle s’arrête ou touche un mur.",
+    "vibrationsHint": "Retour tactile quand un véhicule en percute un autre.",
     "notifications": "Notifications",
     "notificationsHint": "Un rappel par jour, vers 18 h, pour ton défi ou ta série.",
     "decor": "Décors",
@@ -759,8 +752,8 @@
     "hours_other": "{{count}} h",
     "vipActive": "Pass VIP actif · renouvellement le {{date}}",
     "banner": {
-      "vip": "Sans pub, {{count}} pièces par jour, vies infinies et une balle exclusive chaque mois.",
-      "starter": "{{coins}} pièces + 2 balles exclusives. Une seule fois !",
+      "vip": "Sans pub, {{count}} pièces par jour, vies infinies et un véhicule exclusif chaque mois.",
+      "starter": "{{coins}} pièces + 2 véhicules exclusifs. Une seule fois !",
       "piggy": "{{amount}} pièces t’attendent. Casse-la !"
     }
   }

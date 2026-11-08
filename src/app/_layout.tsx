@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AdHost } from '@/core/components/AdHost';
 import { GuidedTourHost } from '@/core/components/GuidedTour';
 import { SCENE_BG } from '@/render/sceneBg';
+import '@/render/thumbnails';
 import { initAudio, setAudioSettings, wantMusic } from '@/core/services/audio';
 import { ads } from '@/core/services/ads';
 import { setHapticsEnabled } from '@/core/services/haptics';
