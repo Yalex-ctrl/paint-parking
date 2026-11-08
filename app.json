@@ -1,0 +1,86 @@
+{
+  "expo": {
+    "name": "Paint Parking",
+    "slug": "paint-parking",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "paintparking",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
+        "NSUserTrackingUsageDescription": "This permission lets us show you ads that suit you better. You can say no: the game stays exactly the same.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": [
+          "fr",
+          "en"
+        ]
+      },
+      "bundleIdentifier": "com.alexgoepfert.paintparking",
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1d1733",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-asset",
+      "expo-audio",
+      "expo-notifications",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": [
+            "fr",
+            "en"
+          ]
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "userTrackingPermission": false
+        }
+      ],
+      "expo-tracking-transparency"
+    ],
+    "locales": {
+      "fr": "./languages/fr.json",
+      "en": "./languages/en.json"
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      }
+    },
+    "owner": "yakisarame1"
+  }
+}

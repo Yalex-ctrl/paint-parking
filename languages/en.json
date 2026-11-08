@@ -1,0 +1,10 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Paint Parking",
+    "NSUserTrackingUsageDescription": "This permission lets us show you ads that suit you better. You can say no: the game stays exactly the same.",
+    "NSUserNotificationsUsageDescription": "Paint Parking can remind you about your daily challenge and when your lives are back."
+  },
+  "android": {
+    "app_name": "Paint Parking"
+  }
+}
