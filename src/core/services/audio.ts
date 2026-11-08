@@ -53,6 +53,12 @@ const SOURCES = {
   rumble: require('../../../assets/audio/sfx/rumble.m4a'),
   clac: require('../../../assets/audio/sfx/clac.m4a'),
   tok: require('../../../assets/audio/sfx/tok.m4a'),
+  // The sounds of the parking (made in code: see scripts/make-parking-sounds.js).
+  engine_start: require('../../../assets/audio/sfx/engine_start.wav'),
+  vroom: require('../../../assets/audio/sfx/vroom.wav'),
+  horn: require('../../../assets/audio/sfx/horn.wav'),
+  pouet: require('../../../assets/audio/sfx/pouet.wav'),
+  barrier: require('../../../assets/audio/sfx/barrier.wav'),
 } as const;
 /** The air of the ball in a chute: one looped player, whose speed follows the ball (see `setWhoosh`). */
 const WHOOSH_SOURCE = require('../../../assets/audio/sfx/whoosh.m4a');
@@ -76,11 +82,11 @@ const warn = (what: string, err: unknown) => {
 /** Length of each sound (ms), to count the voices in use; and how much each one matters when all 8 are busy. */
 const DURATION: Record<SfxName | 'plip', number> = {
   impact_soft: 270, impact_hard: 320, coin: 300, door_open: 550, win: 1150, fail: 380, teleport: 620, break: 790, bomb: 540, stop: 190,
-  click: 200, popup_open: 230, popup_close: 220, purchase: 500, chest: 620, world: 1330, tier: 1000, piggy_break: 810, streak_saved: 880, plip: 300, plop: 200, rumble: 800, clac: 120, tok: 160,
+  click: 200, popup_open: 230, popup_close: 220, purchase: 500, chest: 620, world: 1330, tier: 1000, piggy_break: 810, streak_saved: 880, plip: 300, plop: 200, rumble: 800, clac: 120, tok: 160, engine_start: 600, vroom: 550, horn: 300, pouet: 170, barrier: 600,
 };
 const PRIORITY: Record<SfxName | 'plip', number> = {
   win: 9, world: 9, tier: 8, piggy_break: 8, streak_saved: 8, purchase: 7, chest: 7, fail: 7, door_open: 7, bomb: 6, break: 6,
-  impact_hard: 5, impact_soft: 5, stop: 5, teleport: 5, plop: 5, rumble: 6, clac: 4, tok: 5, coin: 4, popup_open: 3, popup_close: 3, click: 2, plip: 1,
+  impact_hard: 5, impact_soft: 5, stop: 5, teleport: 5, plop: 5, rumble: 6, clac: 4, tok: 5, engine_start: 4, vroom: 4, horn: 5, pouet: 4, barrier: 6, coin: 4, popup_open: 3, popup_close: 3, click: 2, plip: 1,
 };
 /** Players kept for each sound: one, two for the ones that overlap most. The two plip files have 2 each. */
 const VOICES: Partial<Record<SfxName | 'plip', number>> = { plip: 2 };

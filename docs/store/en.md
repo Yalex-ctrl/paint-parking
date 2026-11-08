@@ -10,35 +10,35 @@ Paint Parking
 
 **Subtitle (30 characters maximum)**
 
-Slide, paint, escape the maze
+Empty the lot, paint the road
 
 **Keywords (100 characters maximum, comma-separated, no space after the comma)**
 
-puzzle,maze,paint,brain,slide,logic,levels,challenge,ball,color,relaxing,casual,offline,fun
+puzzle,parking,cars,traffic,jam,paint,brain,logic,levels,challenge,color,relaxing,casual,offline
 
 **Promotional text (170 characters maximum)**
 
-Slide your ball, paint every tile and find the exit! A new challenge every day, hundreds of levels and dozens of balls and paints to collect.
+Swipe the cars out of a jammed lot and leave a trail of paint! A new challenge every day, hundreds of levels, dozens of vehicles and paints to collect.
 
 **Description**
 
-Slide, paint, escape the maze!
+Free the cars, paint the road!
 
-Paint Parking is a soothing puzzle game: flick your finger and the ball slides all the way to the wall, painting every tile it crosses. Once the whole floor is colored, the exit opens. Easy to pick up, tricky to master.
+Paint Parking is a soothing puzzle game: swipe a car and it drives out of the parking lot, leaving a trail of paint behind it. But if another vehicle is in the way, it honks, bumps and comes back. Empty the lot without a single collision for 3 stars.
 
-• Hundreds of ever smarter levels: stop tiles, bends, teleporters, fragile walls, paint bombs…
-• A brand-new daily challenge, 365 days a year, with its own surprise ball and paint. Keep your streak alive!
-• Dozens of balls and paints to unlock: lava, galaxy, crystal, hologram…
+• Hundreds of ever smarter levels: fixed obstacles, long trucks, barriers that open when enough cars have left, one-way arrows…
+• A brand-new daily challenge, 365 days a year, with its own surprise vehicle and paint. Keep your streak alive!
+• Dozens of vehicles and paints to unlock: taxi, police car, fire truck, golden car, galaxy…
 • Chests, gifts, a wheel of fortune and coins to earn just by playing.
 • A gallery of pictures that reveal themselves as you win.
-• Gentle sound and music, pleasant haptics, 3D scenery.
+• Gentle sounds and music, pleasant haptics, 3D scenery.
 • Play offline, whenever you like.
 
 VIP PASS (optional subscription)
 • No more forced ads
 • 100 free coins every day
 • Unlimited lives
-• An exclusive ball every month, yours to keep forever
+• An exclusive vehicle every month, yours to keep forever
 • A second free wheel spin every day
 
 The VIP Pass is an auto-renewing subscription, billed monthly or yearly; the price is shown in the app before you subscribe. Payment is charged to your Apple account when you confirm the purchase. The subscription renews automatically, at the same price, unless you cancel at least 24 hours before the end of the current period. You can manage or cancel your subscription at any time in your Apple account settings.
@@ -48,10 +48,10 @@ Privacy Policy: https://yalex-ctrl.github.io/paint-parking-site/privacy.html
 
 ## The 5 screenshot captions
 
-1. Slide, paint, escape!
+1. Swipe, drive out, paint!
 2. Hundreds of clever levels
 3. A new daily challenge
-4. Collect balls and paints
+4. Collect vehicles and paints
 5. Gifts to grab every day
 
 ## In-app purchases (name ≤ 30 characters, description ≤ 45 characters)
@@ -61,7 +61,7 @@ Privacy Policy: https://yalex-ctrl.github.io/paint-parking-site/privacy.html
 | `paintparking_vip_monthly` | VIP Pass monthly | No ads, 100 coins a day, unlimited lives. |
 | `paintparking_vip_yearly` | VIP Pass yearly | The VIP Pass for a year, 37% cheaper. |
 | `paintparking_no_ads` | No ads | No more ads between levels. |
-| `paintparking_starter_pack` | Starter pack | 1,500 coins and 2 exclusive balls. |
+| `paintparking_starter_pack` | Starter pack | 1,500 coins, 2 exclusive vehicles. |
 | `paintparking_coins_1000` | 1,000 coins | A small pack of coins. |
 | `paintparking_coins_3000` | 3,000 coins | A pack of coins, +20% free. |
 | `paintparking_coins_10000` | 10,000 coins | The big pack, +65% free. |
@@ -73,7 +73,7 @@ Privacy Policy: https://yalex-ctrl.github.io/paint-parking-site/privacy.html
 
 **Group display name**: VIP Pass
 
-**Description of the perks (for each subscription's page)**: No forced ads, 100 coins a day, unlimited lives and an exclusive ball every month.
+**Description of the perks (for each subscription's page)**: No forced ads, 100 coins a day, unlimited lives and an exclusive vehicle every month.
 
 ## Permissions (iOS system prompts)
 

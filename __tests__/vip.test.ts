@@ -334,9 +334,7 @@ describe('the paywall and where it is offered (read in the code)', () => {
     expect(read('app/settings.tsx')).toContain("source: 'reglages'");
   });
 
-  // The screen of the level is a placeholder until the HUD of Paint Maze is ported (legacy-maze/src/screens/GameScreen.tsx holds the
-  // code this checks): turn this back on, on src/screens/GameScreen.tsx, when it is.
-  it.skip('comes by itself only at the end of a step, never in the tour, the tutorials or the first levels', () => {
+  it('comes by itself only at the end of a step, never in the tour, the tutorials or the first levels', () => {
     const game = read('screens/GameScreen.tsx');
     expect(game).toContain('pendingPaywall');
     expect(game).toMatch(/autoOffer\([\s\S]*endsStep: true/);

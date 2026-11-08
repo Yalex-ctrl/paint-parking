@@ -79,7 +79,11 @@ const SHINE_S = 1.5;
 
 const pose: Pose = { x: 0, z: 0, yaw: 0 };
 
+let sceneCount = 0;
+
 export class ParkingScene {
+  /** Tells two scenes of the same level apart (a restart builds a new one). */
+  readonly uid = ++sceneCount;
   readonly level: Level;
   readonly actors: Actor[];
   /** The paint on the ground: x, z, yaw and colour of each mark. */
@@ -162,7 +166,11 @@ export class ParkingScene {
 
   /** True while anything is moving or shining: the scene only has to update its meshes then. */
   get active(): boolean {
-    return this.shine >= 0 || this.actors.some((a) => a.busy) || this.puffs.some((p) => p.active) || this.emojis.some((e) => e.active);
+    if (this.shine >= 0) return true;
+    for (let i = 0; i < this.actors.length; i++) if (this.actors[i].busy) return true;
+    for (let i = 0; i < this.puffs.length; i++) if (this.puffs[i].active) return true;
+    for (let i = 0; i < this.emojis.length; i++) if (this.emojis[i].active) return true;
+    return false;
   }
 
   /** Starts the animation of a gesture the rules have just settled. */
@@ -254,7 +262,8 @@ export class ParkingScene {
 
   update(dtRaw: number) {
     const dt = Math.min(dtRaw, 0.05);
-    for (const a of this.actors) {
+    for (let i = 0; i < this.actors.length; i++) {
+      const a = this.actors[i];
       switch (a.mode) {
         case Mode.Exit:
           this.updateExit(a, dt);
@@ -269,12 +278,14 @@ export class ParkingScene {
           break;
       }
     }
-    for (const p of this.puffs) {
+    for (let i = 0; i < this.puffs.length; i++) {
+      const p = this.puffs[i];
       if (!p.active) continue;
       p.t += dt;
       if (p.t > 0.7) p.active = false;
     }
-    for (const e of this.emojis) {
+    for (let i = 0; i < this.emojis.length; i++) {
+      const e = this.emojis[i];
       if (!e.active) continue;
       e.t += dt;
       if (e.t > 1.0) e.active = false;

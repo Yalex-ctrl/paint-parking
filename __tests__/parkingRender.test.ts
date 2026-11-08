@@ -267,3 +267,52 @@ describe('the geometry', () => {
     expect(carGeometry(3).boundingBox === null || true).toBe(true);
   });
 });
+
+describe('the road between two levels', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { linkOffset, PLATE_MARGIN, LINK_GAP } = require('../src/render/coords');
+
+  it('puts the next level straight below the current one, with room for the road between the two plates', () => {
+    const [x, y, z] = linkOffset({ rows: 6 }, { rows: 8 });
+    expect([x, y]).toEqual([0, 0]);
+    // The two plates are PLATE_MARGIN past their lots: what is left between them is exactly the gap.
+    expect(z - 6 / 2 - 8 / 2 - 2 * PLATE_MARGIN).toBeCloseTo(LINK_GAP, 6);
+  });
+
+  it('the camera of the next level is the camera of this one moved by that offset (same angle, same distance for the same size)', () => {
+    const a = new THREE.PerspectiveCamera();
+    const b = new THREE.PerspectiveCamera();
+    const margins = { top: 200, bottom: 120 };
+    const level = { rows: 6, cols: 5 };
+    fitCamera(a, level, 390, 844, margins);
+    fitCamera(b, level, 390, 844, margins);
+    expect(b.quaternion.angleTo(a.quaternion)).toBeLessThan(1e-9);
+    expect(b.position.distanceTo(a.position)).toBeLessThan(1e-9);
+  });
+});
+
+describe('the sounds of the parking', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs') as typeof import('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path') as typeof import('path');
+  const names = ['engine_start', 'vroom', 'horn', 'pouet', 'barrier'];
+
+  it('are soft, short WAV files, and the audio engine knows them', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../src/core/services/audio.ts'), 'utf8');
+    for (const n of names) {
+      const file = path.join(__dirname, '../assets/audio/sfx', `${n}.wav`);
+      const bytes = fs.readFileSync(file);
+      expect(bytes.toString('ascii', 0, 4)).toBe('RIFF');
+      const samples = (bytes.length - 44) / 2;
+      const seconds = samples / 22050;
+      expect(seconds).toBeGreaterThan(0.1);
+      expect(seconds).toBeLessThan(0.8);
+      let peak = 0;
+      for (let i = 0; i < samples; i++) peak = Math.max(peak, Math.abs(bytes.readInt16LE(44 + i * 2)) / 32768);
+      expect({ n, loud: peak > 0.6 }).toEqual({ n, loud: false });
+      expect({ n, silent: peak < 0.2 }).toEqual({ n, silent: false });
+      expect(source).toContain(`${n}: require('../../../assets/audio/sfx/${n}.wav')`);
+    }
+  });
+});

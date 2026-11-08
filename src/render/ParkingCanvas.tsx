@@ -5,17 +5,19 @@ import * as THREE from 'three';
 
 import { DECOR_MODELS } from '../core/render/decor/catalog';
 import { getDecorLibrary, preloadDecor, type DecorLibrary, type DecorPart } from '../core/render/decor/models';
-import { MAX_PIXEL_RATIO } from '../core/render/perf';
+import { MAX_PIXEL_RATIO, useQuality } from '../core/render/perf';
+import { PerfMonitor } from './PerfMonitor';
 import { createRng } from '../core/rng';
 import { DELTA } from '../core/grid';
 import type { Level } from '../game/types';
 import { fitCamera, type Margins } from './cameraFit';
-import { cellAt, ROAD_W, SIDEWALK, SLAB_H, VEHICLE_H } from './coords';
+import { cellAt, linkOffset, PLATE_MARGIN, ROAD_MARGIN, ROAD_W, SIDEWALK, SLAB_H, VEHICLE_H } from './coords';
 import { digitTexture, emojiTexture } from './textures';
 import { crownGeometry, lightsGeometry, shadowGeometry, carGeometry, skinGeometry } from './vehicleGeometry';
 import { specOf, type Finish } from './skinSpecs';
 import { buildLotGeometry, gateGeometry } from './lotGeometry';
-import { EMOJIS, PUFFS, TRAIL_CAPACITY, type ParkingScene } from './ParkingScene';
+import { box, merge } from './geo';
+import { EMOJIS, PUFFS, TRAIL_CAPACITY, type Actor, type ParkingScene } from './ParkingScene';
 import { LOT_COLORS } from './palette';
 
 /** Clear colour: only visible for a few frames at start-up. */
@@ -58,9 +60,17 @@ export function createPickBridge(level: () => Level): PickBridge {
   return bridge;
 }
 
+/** A level that is ready to play: its rules are compiled elsewhere, the canvas only needs the level and its scene. */
+export type Stage = { level: Level; scene: ParkingScene };
+
 type Props = {
   level: Level;
   scene: ParkingScene;
+  /** The next level, mounted below the current one as soon as it is prepared, so the transition never waits. */
+  next: Stage | null;
+  /** Bump to start the transition to `next`: the camera follows the road to it. */
+  transition: number;
+  onTransitionDone?: () => void;
   bridge: PickBridge;
   margins: Margins;
   /** False while another screen is on top: nothing is drawn. */
@@ -237,6 +247,33 @@ const Z = new THREE.Vector3(0, 0, 1);
 const X = new THREE.Vector3(1, 0, 0);
 const _c = new THREE.Color();
 
+/** Writes the matrices of a kind of vehicle (nothing is allocated: plain loops, shared temporaries). */
+function writeVehicles(list: Actor[], body: THREE.InstancedMesh | null, lights: THREE.InstancedMesh | null, shadow: THREE.InstancedMesh | null, dressedId: number) {
+  if (!body || !lights || !shadow) return;
+  for (let i = 0; i < list.length; i++) {
+    const actor = list[i];
+    const hide = actor.hidden;
+    // The vehicle that wears a skin is drawn apart (its colours are in its geometry).
+    _s.setScalar(hide || actor.id === dressedId ? 0 : 1);
+    _q.setFromAxisAngle(Y, actor.yaw);
+    _q2.setFromAxisAngle(Z, -actor.pitch);
+    _q3.setFromAxisAngle(X, actor.roll);
+    _q.multiply(_q2).multiply(_q3);
+    _p.set(actor.x, 0.03, actor.z);
+    _m.compose(_p, _q, _s);
+    body.setMatrixAt(i, _m);
+    lights.setMatrixAt(i, _m);
+    _q.setFromAxisAngle(Y, actor.yaw);
+    _p.set(actor.x, 0.036, actor.z);
+    _s.setScalar(hide ? 0 : 1);
+    _m.compose(_p, _q, _s);
+    shadow.setMatrixAt(i, _m);
+  }
+  body.instanceMatrix.needsUpdate = true;
+  lights.instanceMatrix.needsUpdate = true;
+  shadow.instanceMatrix.needsUpdate = true;
+}
+
 function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
   const a = sharedAssets();
   const cars = useMemo(() => scene.actors.filter((x) => x.len === 2), [scene]);
@@ -273,33 +310,9 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
   useFrame(() => {
     if (!first.current && !scene.active) return;
     first.current = false;
-    const write = (list: typeof cars, body: THREE.InstancedMesh | null, lights: THREE.InstancedMesh | null, shadow: THREE.InstancedMesh | null) => {
-      if (!body || !lights || !shadow) return;
-      list.forEach((actor, i) => {
-        const hide = actor.hidden;
-        // The vehicle that wears a skin is drawn apart (its colours are in its geometry).
-        const dressed = actor.id === scene.player && wornGeometry !== null;
-        _s.setScalar(hide || dressed ? 0 : 1);
-        _q.setFromAxisAngle(Y, actor.yaw);
-        _q2.setFromAxisAngle(Z, -actor.pitch);
-        _q3.setFromAxisAngle(X, actor.roll);
-        _q.multiply(_q2).multiply(_q3);
-        _p.set(actor.x, 0.03, actor.z);
-        _m.compose(_p, _q, _s);
-        body.setMatrixAt(i, _m);
-        lights.setMatrixAt(i, _m);
-        _q.setFromAxisAngle(Y, actor.yaw);
-        _p.set(actor.x, 0.036, actor.z);
-        _s.setScalar(hide ? 0 : 1);
-        _m.compose(_p, _q, _s);
-        shadow.setMatrixAt(i, _m);
-      });
-      body.instanceMatrix.needsUpdate = true;
-      lights.instanceMatrix.needsUpdate = true;
-      shadow.instanceMatrix.needsUpdate = true;
-    };
-    write(cars, refs.car.current, refs.carLights.current, refs.carShadow.current);
-    write(trucks, refs.truck.current, refs.truckLights.current, refs.truckShadow.current);
+    const dressed = wornGeometry !== null ? scene.player : -1;
+    writeVehicles(cars, refs.car.current, refs.carLights.current, refs.carShadow.current, dressed);
+    writeVehicles(trucks, refs.truck.current, refs.truckLights.current, refs.truckShadow.current, dressed);
     const w = worn.current;
     if (w && player) {
       w.visible = !player.hidden;
@@ -390,7 +403,8 @@ function Effects({ scene }: { scene: ParkingScene }) {
   useFrame(() => {
     const m = puffs.current;
     if (m) {
-      scene.puffs.forEach((p, i) => {
+      for (let i = 0; i < scene.puffs.length; i++) {
+        const p = scene.puffs[i];
         const k = p.t / 0.7;
         const size = p.active ? 0.15 + 0.55 * Math.sin(Math.min(1, k) * Math.PI * 0.9) : 0;
         _p.set(p.x, 0.2 + k * 0.3, p.z);
@@ -398,19 +412,20 @@ function Effects({ scene }: { scene: ParkingScene }) {
         _s.setScalar(size);
         _m.compose(_p, _q, _s);
         m.setMatrixAt(i, _m);
-      });
+      }
       m.instanceMatrix.needsUpdate = true;
     }
-    scene.emojis.forEach((e, i) => {
+    for (let i = 0; i < scene.emojis.length; i++) {
+      const e = scene.emojis[i];
       const s = sprites.current[i];
-      if (!s) return;
+      if (!s) continue;
       s.visible = e.active;
-      if (!e.active) return;
+      if (!e.active) continue;
       const pop = Math.min(1, e.t * 8);
       const fade = e.t > 0.75 ? 1 - (e.t - 0.75) / 0.25 : 1;
       s.position.set(e.x, VEHICLE_H + 0.5 + e.t * 0.35, e.z);
       s.scale.setScalar(0.65 * pop * (0.8 + 0.2 * fade));
-    });
+    }
   });
   const tex = useMemo(() => emojiTexture(), []);
   return (
@@ -527,7 +542,9 @@ function PartInstances({ part, placements }: { part: DecorPart; placements: Plac
 }
 
 function Decor({ level, enabled }: { level: Level; enabled: boolean }) {
-  const library = useDecorLibrary(enabled);
+  // A phone that cannot keep up loses the scenery first.
+  const quality = useQuality();
+  const library = useDecorLibrary(enabled && quality <= 1);
   const groups = useMemo(() => {
     const byModel = new Map<string, Placed[]>();
     for (const p of planDecor(level)) {
@@ -549,22 +566,91 @@ function Decor({ level, enabled }: { level: Level; enabled: boolean }) {
 
 /* ----------------------------------------------------------------------------------------- canvas */
 
-function Scene({ level, scene, bridge, margins, decor, skin, onReady }: Omit<Props, 'active'>) {
+/** Everything of one level, at its place in the world (the next level waits below the current one). */
+function World({ level, scene, decor, skin, offset }: { level: Level; scene: ParkingScene; decor: boolean; skin: string; offset: [number, number, number] }) {
   return (
-    <>
-      <CameraRig level={level} margins={margins} bridge={bridge} />
-      <Lights />
-      <Ready onReady={onReady} />
+    <group position={offset}>
       <Lot level={level} scene={scene} />
       <Decor level={level} enabled={decor} />
       <Trails scene={scene} />
       <Vehicles scene={scene} skin={skin} />
       <Effects scene={scene} />
       <HintMarker scene={scene} />
-    </>
+    </group>
   );
 }
 
+/** The road that links a level to the next one, across the grass between their plates. */
+function Link({ current, next, offset }: { current: Level; next: Level; offset: [number, number, number] }) {
+  const { lot } = sharedAssets();
+  const from = current.rows / 2 + ROAD_MARGIN;
+  const to = offset[2] - next.rows / 2 - ROAD_MARGIN;
+  const geometry = useMemo(() => {
+    const g = merge([box(ROAD_W + 0.5, 0.3, to - from + 2 * (PLATE_MARGIN - ROAD_MARGIN + 0.2), 0, -0.15, (from + to) / 2, LOT_COLORS.wood), box(ROAD_W, 0.024, to - from, 0, 0.012, (from + to) / 2, LOT_COLORS.road)]);
+    return g;
+  }, [from, to]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh geometry={geometry} material={lot} />;
+}
+
+const DURATION = 1.5;
+
+/**
+ * The camera follows the road from the current lot to the next. Only the position moves (the angle is the same for every lot), and
+ * the screen swaps the levels when it arrives: the camera is then exactly where the new level frames itself, so nothing jumps.
+ */
+function Director({ next, offset, transition, margins, onDone }: { next: Stage | null; offset: [number, number, number]; transition: number; margins: Margins; onDone?: () => void }) {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  const probe = useMemo(() => new THREE.PerspectiveCamera(), []);
+  const state = useRef({ id: transition, t: -1, from: new THREE.Vector3(), to: new THREE.Vector3() });
+  useLayoutEffect(() => {
+    const s = state.current;
+    if (transition === s.id) return;
+    s.id = transition;
+    if (!next) {
+      onDone?.();
+      return;
+    }
+    fitCamera(probe, next.level, width, height, margins);
+    s.to.copy(probe.position).add(_off.set(offset[0], offset[1], offset[2]));
+    s.from.copy(camera.position);
+    s.t = 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transition]);
+  useFrame((_, dt) => {
+    const s = state.current;
+    if (s.t < 0) return;
+    s.t += Math.min(dt, 0.05) / DURATION;
+    const k = Math.min(1, s.t);
+    const e = k * k * (3 - 2 * k);
+    camera.position.lerpVectors(s.from, s.to, e);
+    camera.updateMatrixWorld();
+    if (s.t >= 1) {
+      s.t = -1;
+      onDone?.();
+    }
+  });
+  return null;
+}
+const _off = new THREE.Vector3();
+
+function Scene({ level, scene, next, transition, onTransitionDone, bridge, margins, decor, skin, onReady }: Omit<Props, 'active'>) {
+  const offset = useMemo(() => (next ? linkOffset(level, next.level) : ([0, 0, 60] as [number, number, number])), [level, next]);
+  return (
+    <>
+      <CameraRig level={level} margins={margins} bridge={bridge} />
+      <Lights />
+      <Ready onReady={onReady} />
+      <PerfMonitor />
+      <World key={scene.uid} level={level} scene={scene} decor={decor} skin={skin} offset={[0, 0, 0]} />
+      {next && <World key={next.scene.uid} level={next.level} scene={next.scene} decor={decor} skin={skin} offset={offset} />}
+      {next && <Link current={level} next={next.level} offset={offset} />}
+      <Director next={next} offset={offset} transition={transition} margins={margins} onDone={onTransitionDone} />
+    </>
+  );
+}
 /**
  * The GL canvas. It stays mounted for the whole session (creating a GL context is slow); the lots inside it come and go. A new
  * `scene` (a new level, or a restart) remounts everything that depends on it.
@@ -585,7 +671,7 @@ function ParkingCanvasImpl(props: Props) {
         gl.setSize(size.width, size.height, false);
       }}
     >
-      <Scene key={props.scene.level.id + ':' + props.level.seed} {...props} />
+      <Scene {...props} />
     </Canvas>
   );
 }

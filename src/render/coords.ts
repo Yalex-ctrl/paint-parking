@@ -18,6 +18,16 @@ export const cellX = (level: Pick<Level, 'cols'>, c: number) => c - level.cols /
 /** World Z of a grid row. */
 export const cellZ = (level: Pick<Level, 'rows'>, r: number) => r - level.rows / 2 + 0.5;
 
+/** Free ground between the plate of a level and the plate of the next one, where the road that links them runs. */
+export const LINK_GAP = 2.2;
+/** How far past the edge of the lot the plate goes (sidewalk, road and a margin of wood). */
+export const PLATE_MARGIN = SIDEWALK + ROAD_W + 0.25;
+
+/** Where the next level waits: straight below the current one, a road between the two. */
+export function linkOffset(current: Pick<Level, 'rows'>, next: Pick<Level, 'rows'>): [number, number, number] {
+  return [0, 0, current.rows / 2 + PLATE_MARGIN + LINK_GAP + PLATE_MARGIN + next.rows / 2];
+}
+
 /** The grid cell under a world point, or null outside the lot. */
 export function cellAt(level: Pick<Level, 'rows' | 'cols'>, x: number, z: number): [number, number] | null {
   const c = Math.floor(x + level.cols / 2);

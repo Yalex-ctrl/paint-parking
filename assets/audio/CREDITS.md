@@ -27,3 +27,15 @@ Each was filtered (soft low-pass), levelled and converted to AAC by `scripts/pre
 | door_open.m4a | footstep_wood_001.ogg + confirmation_002.ogg (delayed 140 ms) | the exit door opens: wood slide + light chime |
 
 Music: `paint_maze_ambiance_douce.m4a`, supplied with the project.
+
+## Sounds of the parking
+
+Synthesised in code by `scripts/make-parking-sounds.js` (the Kenney packs could not be downloaded automatically). Soft by construction: low-passed, gentle attacks, quiet peak.
+
+| File (assets/audio/sfx/) | Used for |
+|---|---|
+| engine_start.wav | an engine turning over, when a vehicle leaves |
+| vroom.wav | the small "vroum" as it pulls away |
+| horn.wav | the short soft horn at a collision |
+| pouet.wav | the squeak of the angry emoji |
+| barrier.wav | a barrier opens |

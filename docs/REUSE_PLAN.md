@@ -61,17 +61,29 @@ Règle : `src/core` n'importe jamais `src/game`. (Quelques fichiers de `core` on
 
 ## État
 
-| Étape | État |
+Vérifié automatiquement : typecheck, lint, 550 tests, export Android (bundle Hermes). **Rien n'a été lancé sur un téléphone ni dans un simulateur** : le rendu, les gestes, les proportions, les sons et les performances sont à juger sur un appareil.
+
+| Domaine | État |
 |---|---|
 | Copie, renommage, isolation des données, identifiants de production retirés | fait |
-| Regroupement du code commun dans `src/core/` | fait (imports réécrits, typecheck et lint propres) |
-| Retrait du code propre au labyrinthe | fait (déplacé dans `legacy-maze/`, hors build) |
-| Règles, solveur, générateur, niveaux, défis, étoiles, points, aide, mécaniques + tests | fait |
-| Rendu 3D du parking (plateau, trottoir, route, places, lignes, obstacles, barrières, flèches, décors Kenney), véhicules procéduraux, sorties, collisions, traînées, vague de brillance, fumée, émoji | fait, **jamais lancé sur un téléphone** (build Android exporté sans erreur, tests de la logique et de la géométrie) |
-| Transition entre niveaux par la route (la caméra suit la route jusqu'au parking suivant) | à faire (pour l'instant le niveau suivant remplace l'actuel) |
-| Vrais modèles Kenney Car Kit | à faire à la main : le site renvoie 403 aux téléchargements automatiques |
-| HUD et écran de jeu, gestes, indice, aide niveaux 1-5, vies, série, résultat, défi du jour | fait (`src/screens/GameScreen.tsx`), jamais lancé sur un téléphone |
-| Visite guidée adaptée au parking, coffre de fin d'étape, galerie à l'écran de résultat | à faire |
-| Boutique « Véhicules » : 40 véhicules + 12 du Pass VIP (noms FR/EN, raretés et prix de Paint Maze), skin porté par le véhicule à couronne, aperçu 3D qui tourne, vignettes dessinées en code, peinture équipée sur la traînée | fait, jamais lancé sur un téléphone (le type d'objet s'appelle encore `ball` dans les sauvegardes et le code, le joueur voit « véhicule ») |
-| Sons du parking | à faire |
-| Mesures de performance en build optimisé | à faire (rien à mesurer avant le rendu) |
+| Regroupement du code commun dans `src/core/` | fait |
+| Retrait du labyrinthe | fait (`legacy-maze/`, hors build, à supprimer) |
+| Règles, solveur, générateur, 50 niveaux, 30 défis, étoiles, points, aide, mécaniques | fait, testés |
+| Rendu 3D : plateau, trottoir, route, places, obstacles, barrières, flèches, décors Kenney | fait |
+| Véhicules | procéduraux (le Kenney Car Kit refuse le téléchargement automatique) ; **à remplacer par les vrais modèles si vous les téléchargez** |
+| Animations : sortie par la route, collision, secousse, fumée, émoji fâché, traînée, vague de brillance | fait |
+| Transition entre niveaux : la caméra suit la route jusqu'au parking suivant, préparé à l'avance | fait |
+| Écran de jeu : HUD, gestes, indice, main d'aide, vies, série, résultat, pièces, coffre d'étape, monde, récompenses, défi du jour avec véhicule et peinture imposés | fait |
+| Visite guidée (textes adaptés), cadeau de fin de tour (50 pièces, comme Paint Maze), pack de départ | fait |
+| Boutique « Véhicules » : 40 + 12 VIP, aperçu 3D, vignettes, skin sur le véhicule à couronne, peinture sur la traînée | fait |
+| Sons : moteur, vroum, klaxon, pouet, barrière | synthétisés en code (`scripts/make-parking-sounds.js`), à remplacer par du Kenney si souhaité ; musique de Paint Maze réutilisée |
+| Icônes et écran de démarrage | dessinés en code (`scripts/make-icons.ts`), provisoires |
+| Fiches App Store, README, site | réécrits pour le parking |
+| Performances | règle « aucune allocation par image » vérifiée par un test ; compteur d'images dans le mode testeur ; **aucune mesure à 60 fps faite** |
+
+## À faire à la main
+
+- `eas init` (nouveau projet EAS), clés RevenueCat, unités AdMob, identifiants App Store Connect : aucun n'est repris de Paint Maze.
+- Télécharger le Kenney Car Kit (CC0) si vous voulez de vrais modèles.
+- Lancer sur un téléphone, puis régler : cadrage, taille des véhicules, courbe de difficulté (`targetDifficulty` dans `game/generator.ts`), sons.
+- Supprimer `legacy-maze/` quand plus rien n'y est utile.

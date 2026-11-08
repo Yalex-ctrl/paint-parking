@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps -- the screen is imperative: the scene and the rules are mutated, the callbacks read refs. */
 import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +12,23 @@ import { HudPop } from '@/core/components/HudPop';
 import { LevelHud } from '@/core/components/LevelHud';
 import { Attention, ResultStars, TutorialBubble } from '@/core/components/LevelResult';
 import { ConfirmLife, OutOfMoves } from '@/core/components/LivesModals';
-import { HintChoice, Overlay, PrimaryButton } from '@/core/components/Modals';
+import { HintChoice, Overlay, PrimaryButton, StarterPackOffer, WorldUnlock, markStarterOffered } from '@/core/components/Modals';
+import { TrialEndCard } from '@/core/components/TrialCards';
+import { OutlineText } from '@/core/ui/OutlineText';
+import { StepEnd, MovesText } from './parts';
+import { chestCoins, endsStep, stepOf } from '@/core/steps';
+import { pictureForLevel, piecesEarned } from '@/core/gallery';
+import { autoOffer, noteAutoOffer, type PaywallSource } from '@/core/vip';
+import { postponeTour, shouldOfferTour } from '@/core/tour';
+import { holdHud, releaseHud } from '@/core/tour/hudStore';
+import { Target } from '@/core/tour/targets';
+import { isTourRunning, onTourEnd, startTour, useTourRunning } from '@/core/tour/tourStore';
+import { notificationPermissionAsked, shouldAskNotificationPermission } from '@/core/notificationPlan';
+import { requestNotificationPermission, syncNotifications } from '@/core/services/notifications';
+import { playContext } from '@/core/services/playClock';
+import type { ShopItem } from '@/core/shopItems';
+import { isDailyLevelId, isNewWorldStart } from '@/core/worlds';
+import { itemName } from '@/core/i18n/names';
 import { HeartPop, NoLivesCard } from '@/core/components/NoLivesCard';
 import { PauseMenu, type PauseAction, type PauseToggle } from '@/core/components/PauseMenu';
 import { SaveStreak } from '@/core/components/StreakModals';
@@ -21,14 +38,22 @@ import { MONETIZATION } from '@/core/config/monetization';
 import { testerTools } from '@/core/config/tester';
 import { dayKeyOf } from '@/core/dates';
 import { settleDaily, settleVictory, type DailyVictory } from '@/core/victory';
-import { payHint, spendCoins } from '@/core/economy';
+import { earnCoins, earnPlayed, payHint, shouldOfferStarter, spendCoins } from '@/core/economy';
 import { formatNumber, t, useLanguage } from '@/core/i18n';
 import { failureCostsStreak, lifeCosts } from '@/core/lives';
 import { scoreLines } from '@/core/points';
 import { Chrono } from '@/core/chrono';
+import { dailyLoadout } from '@/core/dailyLoadout';
+import { LoadoutOffer } from '@/core/components/LoadoutOffer';
+import { perf, useFps, useQuality, useWorst } from '@/core/render/perf';
+import { slowest } from '@/core/render/profiler';
 import { particlePalette } from '@/core/render/paintPalette';
 import { ParkingCanvas, createPickBridge } from '@/render/ParkingCanvas';
 import { ParkingScene, type SceneEvent } from '@/render/ParkingScene';
+import { bubbleSlot } from '@/render/bubbleSlot';
+import { lotBandPx } from '@/render/cameraFit';
+import { RewardBurst } from '@/core/components/RewardBurst';
+import { resultTimings } from '@/core/render/resultTimings';
 import { SCENE_BG } from '@/render/sceneBg';
 import { ads } from '@/core/services/ads';
 import { track } from '@/core/services/analytics';
@@ -54,7 +79,6 @@ import { activeLimit, recomputeStars, starsFor } from '@/game/scoring';
 import { optimalOf } from '@/game/levels';
 import { tutorialFor } from '@/game/mechanics';
 import type { Dir, Level, Tutorial } from '@/game/types';
-import { isDailyLevelId } from '@/core/worlds';
 
 /** The header takes three rows (see components/LevelHud.tsx), then the bar of the stars. */
 const HEADER_H = 8 + 45 + 8 + 44 + 8 + 30;
@@ -67,10 +91,30 @@ const RESULT_MS = 3200;
 
 const recompute: RecomputeStars = (stars, moves) => recomputeStars(stars, moves, optimalOf);
 
-type Popup = { kind: 'hint' } | { kind: 'confirmRestart' } | { kind: 'outOfMoves' } | { kind: 'saveStreak'; value: number };
+type Run = { level: Level; board: ReturnType<typeof compile>; scene: ParkingScene; state: GameState };
+
+function makeRun(level: Level): Run {
+  const board = compile(level);
+  return { level, board, scene: new ParkingScene(level), state: createState(board) };
+}
+
+type Popup =
+  | { kind: 'hint' }
+  | { kind: 'confirmRestart' }
+  | { kind: 'outOfMoves' }
+  | { kind: 'saveStreak'; value: number }
+  | { kind: 'world'; levelId: number }
+  | { kind: 'reward'; item: ShopItem }
+  | { kind: 'starter' }
+  | { kind: 'tourIntro' }
+  | { kind: 'trialEnd'; itemId: string }
+  | { kind: 'step'; step: number; coins: number; progress: { levelId: number; picture: number; pieces: number } | null };
 
 type End = {
   key: number;
+  levelId: number;
+  picture: number;
+  piecesAfter: number;
   stars: 1 | 2 | 3;
   next: number;
   newRecord: boolean;
@@ -100,6 +144,21 @@ function GuideHand({ x, y, dir }: { x: number; y: number; dir: Dir }) {
   );
 }
 
+/** Developers only: the frame rate of the scene, and the quality step the phone has been brought down to. */
+function FpsCounter({ top }: { top: number }) {
+  const fps = useFps();
+  const quality = useQuality();
+  const worst = useWorst();
+  return (
+    <View pointerEvents="none" style={[styles.fps, { top }]}>
+      <Text style={styles.fpsText}>
+        {fps} fps · Q{quality} · max {worst} ms · {perf.calls} calls
+      </Text>
+      <Text style={styles.fpsText}>{slowest() || 'no slow event'}</Text>
+    </View>
+  );
+}
+
 export default function GameScreen() {
   useLanguage();
   const insets = useSafeAreaInsets();
@@ -116,8 +175,18 @@ export default function GameScreen() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [moves, setMoves] = useState(0);
   const [extraMoves, setExtraMoves] = useState(0);
-  const [popup, setPopup] = useState<Popup | null>(null);
-  const [end, setEnd] = useState<End | null>(null);
+  const popupRef = useRef<Popup | null>(null);
+  const [popup, setPopupState] = useState<Popup | null>(null);
+  const setPopup = useCallback((p: Popup | null) => {
+    popupRef.current = p;
+    setPopupState(p);
+  }, []);
+  const endRef = useRef<End | null>(null);
+  const [end, setEndState] = useState<End | null>(null);
+  const setEnd = useCallback((e: End | null) => {
+    endRef.current = e;
+    setEndState(e);
+  }, []);
   const [confetti, setConfetti] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [guide, setGuide] = useState<Hint | null>(null);
@@ -127,6 +196,10 @@ export default function GameScreen() {
   const [dailyResult, setDailyResult] = useState<DailyVictory | null>(null);
 
   const daily = params.daily === '1';
+  const [today] = useState(() => dayKeyOf(new Date()));
+  // In the daily challenge the vehicle and the paint of the day are imposed (the same for everybody).
+  const loadout = useMemo(() => (daily ? dailyLoadout(today) : null), [daily, today]);
+  const [loadoutLater, setLoadoutLater] = useState(false);
 
   // The level being played.
   const level: Level | null = useMemo(() => {
@@ -134,15 +207,22 @@ export default function GameScreen() {
     return levelId === null ? null : levelOfId(levelId);
   }, [daily, params.challenge, levelId]);
 
-  // A new level or a restart: the rules, the scene and the moves start again.
+  // The next level, prepared while the player is playing the current one: it waits below on the road.
+  const preparedRef = useRef<Run | null>(null);
+  const [nextRun, setNextRun] = useState<Run | null>(null);
+  const [transition, setTransition] = useState(0);
+  const [moving, setMoving] = useState(false);
+
+  // A new level or a restart: the rules, the scene and the moves start again (or the prepared level takes over).
   const run = useMemo(() => {
     if (!level) return null;
-    const board = compile(level);
-    const scene = new ParkingScene(level);
-    const state: GameState = createState(board);
-    return { level, board, scene, state };
+    const ready = preparedRef.current;
+    if (ready && ready.level === level) {
+      preparedRef.current = null;
+      return ready;
+    }
+    return makeRun(level);
     // A restart (runKey) builds the rules and the scene again for the same level.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, runKey]);
 
   const levelRef = useRef<Level | null>(null);
@@ -158,6 +238,12 @@ export default function GameScreen() {
   const pending = useRef<ReturnType<typeof setTimeout>[]>([]);
   const afterLoss = useRef<(() => void) | null>(null);
   const adMovesUsed = useRef(false);
+  const pendingTour = useRef(false);
+  const pendingPaywall = useRef<PaywallSource | null>(null);
+  const pendingReward = useRef<ShopItem | null>(null);
+  const trialEnded = useRef<string | null>(null);
+  const [trialEndId, setTrialEndId] = useState<string | null>(null);
+  const tourRunning = useTourRunning();
   const touched = useRef(-1);
   const swiped = useRef(false);
 
@@ -227,23 +313,28 @@ export default function GameScreen() {
   useEffect(() => {
     if (!run) return;
     const sounds: Record<SceneEvent, () => void> = {
-      exit: () => playSfx('plop', 0.7),
+      exit: () => {
+        playSfx('engine_start', 0.6);
+        setTimeout(() => playSfx('vroom', 0.7), 160);
+      },
       bump: () => {
         playSfx('impact_soft');
         impact(Haptics.ImpactFeedbackStyle.Medium);
       },
-      horn: () => playSfx('clac'),
+      horn: () => {
+        playSfx('horn');
+        setTimeout(() => playSfx('pouet', 0.8), 240);
+      },
       shake: () => playSfx('tok', 0.6),
       gateOpen: () => {
-        playSfx('door_open');
+        playSfx('barrier');
         notify(Haptics.NotificationFeedbackType.Success);
       },
     };
     run.scene.onEvent = (e) => sounds[e]();
     // The vehicle with the crown leaves a trail of the equipped paint.
-    const palette = particlePalette(profile.equipped.paint, 0xff5468);
+    const palette = particlePalette(loadout ? loadout.paint.id : profile.equipped.paint, 0xff5468);
     run.scene.setTrailColor(run.scene.player, `#${palette[0].toString(16).padStart(6, '0')}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run]);
 
   // Everything starts again with a new level or a restart.
@@ -256,7 +347,6 @@ export default function GameScreen() {
     setMoves(0);
     setExtraMoves(0);
     setEnd(null);
-    setPopup(null);
     setGuide(null);
     setDailyResult(null);
     lastActivity.current = Date.now();
@@ -269,8 +359,20 @@ export default function GameScreen() {
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run]);
+
+  // A couple of seconds into a level, when nothing else is happening, the next one is made and mounted below.
+  useEffect(() => {
+    setNextRun(null);
+    if (!run || daily) return;
+    const id = setTimeout(() => {
+      const upcoming = levelOfId(run.level.id + 1);
+      const made = makeRun(upcoming);
+      preparedRef.current = made;
+      setNextRun(made);
+    }, 2500);
+    return () => clearTimeout(id);
+  }, [run, daily]);
 
   const showHintFor = useCallback(
     (ms: number | null) => {
@@ -332,13 +434,21 @@ export default function GameScreen() {
     const previousBest = before.moves[lvl.id];
     const previousStars = (before.stars[lvl.id] ?? 0) as 0 | 1 | 2 | 3;
     const wasMinimal = lvl.id <= 5 && !((before.stars[5] ?? 0) > 0);
+    // Level 5 won for the first time: the header stays as it is until the tour has brought the rest in.
+    if (lvl.id === 5 && wasMinimal && shouldOfferTour(getProfile(), 5, false)) holdHud();
+    const { picture } = pictureForLevel(lvl.id);
     const after = completeLevelNow(lvl.id, earned, state.moves);
     setDoneStars({ ...after.stars });
     const won = settleVictory(getProfile(), { levelId: lvl.id, stars: earned, previousStars, picked: 0, moves: state.moves, optimum: lvl.optimal, seconds, hintUsed: hintUsed.current });
     updateProfile(() => won.profile);
+    if (won.trialEnded) trialEnded.current = won.trialEnded;
+    if (won.reward) pendingReward.current = won.reward;
     runWhenIdle(() => track('level_complete', { level: lvl.id, moves: state.moves, stars: earned, duration: seconds }));
     setEnd({
       key: Date.now(),
+      levelId: lvl.id,
+      picture,
+      piecesAfter: piecesEarned(after.stars, picture),
       stars: earned,
       next: after.current,
       newRecord: previousBest !== undefined && state.moves < previousBest,
@@ -352,12 +462,69 @@ export default function GameScreen() {
     });
   }, [run, later]);
 
-  const goNext = useCallback(() => {
-    setEnd((e) => {
-      if (e) setLevelId(e.next);
-      return null;
-    });
+  const finishNext = useCallback(() => {
+    const e = endRef.current;
+    if (!e) return;
+    setEnd(null);
+    setLevelId(e.next);
     setRunKey((k) => k + 1);
+    if (trialEnded.current) {
+      setTrialEndId(trialEnded.current);
+      trialEnded.current = null;
+    }
+    // After level 5 (and again after level 6 if the player said "later"): the offer of the guided tour.
+    const offerTour = shouldOfferTour(getProfile(), e.levelId, false);
+    // The last level of a step: the chest. (The first step, levels 1 to 5, has no chest: the tour comes instead.)
+    if (endsStep(e.levelId) && stepOf(e.levelId) >= 1) {
+      const chest = earnPlayed(getProfile(), chestCoins(stepOf(e.levelId)));
+      updateProfile(() => chest.profile);
+      playSfx('chest');
+      pendingTour.current = offerTour;
+      const ctx = playContext();
+      pendingPaywall.current = autoOffer(
+        getProfile(),
+        { completedLevel: e.levelId, endsStep: true, inTour: isTourRunning(), inTutorial: false, sinceAdSec: ctx.lastAdAt === null ? null : ctx.playSeconds - ctx.lastAdAt },
+        Date.now(),
+      );
+      setPopup({ kind: 'step', step: stepOf(e.levelId) + 1, coins: chest.gained, progress: { levelId: e.levelId, picture: e.picture, pieces: e.piecesAfter } });
+      return;
+    }
+    if (offerTour) {
+      setPopup({ kind: 'tourIntro' });
+      return;
+    }
+    // At most one pop-up per level: a reward, else a new world; the notification permission is asked once the player has played a little.
+    if (pendingReward.current) {
+      setPopup({ kind: 'reward', item: pendingReward.current });
+      pendingReward.current = null;
+    } else if (isNewWorldStart(e.next)) {
+      setPopup({ kind: 'world', levelId: e.next });
+    } else if (shouldAskNotificationPermission(getProfile(), e.levelId)) {
+      updateProfile(notificationPermissionAsked);
+      requestNotificationPermission().then(() => syncNotifications(getProfile()));
+    }
+  }, [setEnd, setPopup]);
+
+  /** The result is over: the camera follows the road to the next lot (or, if it is not ready, the next level simply replaces this one). */
+  const goNext = useCallback(() => {
+    const e = endRef.current;
+    if (!e || moving) return;
+    if (nextRun && nextRun.level.id === e.next) {
+      setMoving(true);
+      setTransition((n) => n + 1);
+    } else finishNext();
+  }, [moving, nextRun, finishNext]);
+
+  const transitionDone = useCallback(() => {
+    setMoving(false);
+    finishNext();
+  }, [finishNext]);
+
+  /** The chest of a step, doubled for a rewarded ad. */
+  const doubleChest = useCallback(() => {
+    const p = popupRef.current;
+    if (!p || p.kind !== 'step') return;
+    ads.showRewarded('double_reward').then((ok) => ok && updateProfile((pr) => earnCoins(pr, p.coins)));
   }, []);
 
   // The result stays for a moment, then the next level comes by itself.
@@ -367,11 +534,38 @@ export default function GameScreen() {
     return () => clearTimeout(id);
   }, [end, goNext]);
 
+  // The end of the tour: "Jouer" starts the level over (it has not been played yet); skipping just goes back to it.
+  useEffect(
+    () =>
+      onTourEnd((e) => {
+        if (!e.completed) return;
+        setRunKey((k) => k + 1);
+        // Right after the tour: the one-time starter pack (48 hours).
+        if (shouldOfferStarter(getProfile())) {
+          setTimeout(() => {
+            markStarterOffered();
+            setPopup({ kind: 'starter' });
+          }, 500);
+        }
+      }),
+    [setPopup],
+  );
+
+  // The card that ends a trial comes once nothing else is on screen.
+  useEffect(() => {
+    if (!trialEndId || popup !== null || tourRunning || menuOpen || end !== null) return;
+    const id = setTimeout(() => {
+      setPopup({ kind: 'trialEnd', itemId: trialEndId });
+      setTrialEndId(null);
+    }, 700);
+    return () => clearTimeout(id);
+  }, [trialEndId, popup, tourRunning, menuOpen, end, setPopup]);
+
   /* --------------------------------------------------------------------------- a gesture */
 
   const act = useCallback(
     (vehicle: number, dir: Dir | null) => {
-      if (!run || finished.current || end || popup || menuOpen) return;
+      if (!run || finished.current || end || popup || menuOpen || tourRunning || moving) return;
       const { scene, board, state } = run;
       scene.lastTouched = vehicle;
       // A vehicle that is still moving ignores gestures; the others stay playable.
@@ -396,7 +590,7 @@ export default function GameScreen() {
         if (shownLimit !== null && state.moves >= shownLimit) later(() => !finished.current && setPopup({ kind: 'outOfMoves' }), 1100);
       }
     },
-    [run, end, popup, menuOpen, shownLimit, tutorialOpen, dismissTutorial, refreshGuide, win, later],
+    [run, end, popup, menuOpen, tourRunning, moving, shownLimit, tutorialOpen, dismissTutorial, refreshGuide, win, later],
   );
   const actRef = useRef(act);
   actRef.current = act;
@@ -579,6 +773,14 @@ export default function GameScreen() {
     { key: 'restart', label: t('lives.restart'), icon: 'restart', onPress: () => { setMenuOpen(false); restart(); } },
     { key: 'settings', label: t('settings.title'), icon: 'cog', onPress: () => { setMenuOpen(false); router.push('/settings'); } },
   ];
+  const pauseDev: PauseAction[] = testerTools()
+    ? [
+        { key: 'tour', label: t('dev.replayTour'), icon: 'help-circle-outline', onPress: () => { setMenuOpen(false); setTimeout(startTour, 350); } },
+        { key: 'next', label: 'Niveau +1', icon: 'skip-next', onPress: () => { setMenuOpen(false); setLevelId((id) => (id ?? 1) + 1); setRunKey((k) => k + 1); } },
+        { key: 'prev', label: 'Niveau −1', icon: 'skip-previous', onPress: () => { setMenuOpen(false); setLevelId((id) => Math.max(1, (id ?? 2) - 1)); setRunKey((k) => k + 1); } },
+        { key: 'win', label: 'Gagner le niveau', icon: 'trophy', onPress: () => { setMenuOpen(false); const r = runRef.current; if (r) r.level.solution.forEach((id, i) => setTimeout(() => actRef.current(id, null), 350 * i)); } },
+      ]
+    : [];
   const pauseToggles: PauseToggle[] = settings
     ? [
         { key: 'music', icon: 'music', offIcon: 'music-off', label: t('settings.music'), on: settings.music, onToggle: () => toggleSetting({ music: !settings.music }) },
@@ -590,11 +792,18 @@ export default function GameScreen() {
   /* --------------------------------------------------------------------------- what is drawn */
 
   const guideAt = guide && run ? bridge.toScreen(run.scene.actors[guide.vehicle].x, run.scene.actors[guide.vehicle].z, 0.4) : null;
-  const bubbleTop = insets.top + HEADER_H + 8;
+  // The bubbles go in the free band above the lot, or under it, never over it.
+  const bubbleTop = level
+    ? bubbleSlot(lotBandPx(level, width, height, margins), { top: insets.top + HEADER_H, bottom: height - margins.bottom }, 74)
+    : insets.top + HEADER_H + 8;
   const noLife = !!level && atStake && lives.count <= 0 && !lives.infinite && !end;
 
   const movesNode = (
-    <Text style={styles.moves}>{shownLimit !== null ? t('game.movesOf', { moves, limit: shownLimit }) : t('game.moves', { count: moves })}</Text>
+    <HudPop id="moves" index={9} minimal={minimal}>
+      <Target id="moves">
+        <MovesText moves={moves} limit={shownLimit} />
+      </Target>
+    </HudPop>
   );
 
   return (
@@ -605,16 +814,21 @@ export default function GameScreen() {
             <ParkingCanvas
               level={level}
               scene={run.scene}
+              next={nextRun && !daily ? { level: nextRun.level, scene: nextRun.scene } : null}
+              transition={transition}
+              onTransitionDone={transitionDone}
               bridge={bridge}
               margins={margins}
               active={focused}
               decor={settings?.decor ?? true}
-              skin={profile.equipped.ball}
+              skin={loadout ? loadout.ball.id : profile.equipped.ball}
               onReady={() => markReady('/')}
             />
           )}
         </View>
       </GestureDetector>
+
+      {testerTools() && settings?.showPerf && <FpsCounter top={insets.top + 8 + 45 + 6} />}
 
       {confetti > 0 && <Confetti key={confetti} width={width} height={height} count={44} />}
 
@@ -632,7 +846,7 @@ export default function GameScreen() {
             flameBoost={0}
           />
 
-          {tutorialOpen && !end && <TutorialBubble text={TUTORIAL_TEXT[tutorialOpen]} top={bubbleTop} onPress={dismissTutorial} />}
+          {tutorialOpen && !end && !tourRunning && <TutorialBubble text={TUTORIAL_TEXT[tutorialOpen]} top={bubbleTop} onPress={dismissTutorial} />}
           {!tutorialOpen && level.id === 1 && moves === 0 && !daily && <TutorialBubble text={t('game.swipeToMove')} top={bubbleTop} />}
           {message && (
             <View style={styles.toast} pointerEvents="none">
@@ -640,7 +854,7 @@ export default function GameScreen() {
             </View>
           )}
 
-          {guide && guideAt && !end && <GuideHand x={guideAt.x} y={guideAt.y} dir={guide.dir} />}
+          {guide && guideAt && !end && !tourRunning && <GuideHand x={guideAt.x} y={guideAt.y} dir={guide.dir} />}
 
           {!end && <AdBanner bottom={insets.bottom} levelId={level.id} />}
 
@@ -681,7 +895,19 @@ export default function GameScreen() {
             gain={end.showGain ? end.total : 0}
             onStar={(i) => playStarNote(Math.min(2, i) as 0 | 1 | 2)}
           />
-          <View style={[styles.next, { bottom: insets.bottom + 24 }]} pointerEvents="box-none">
+          {end.showGain && end.total > 0 && (
+            // The gain, a single number under the stars, goes to the counter as coins; nothing else is written over the board.
+            <RewardBurst
+              key={`burst${end.key}`}
+              total={end.total}
+              count={Math.min(9, Math.max(3, end.total))}
+              showLabel={false}
+              delay={resultTimings(end.stars).flyAt}
+              from={{ x: width / 2, y: insets.top + HEADER_H + 8 + 62 + 6 + 22 }}
+              to={{ x: width - 56, y: insets.top + 8 + 45 + 8 + 22 }}
+            />
+          )}
+          <View style={[styles.next, { bottom: insets.bottom + 24, opacity: moving ? 0 : 1 }]} pointerEvents={moving ? 'none' : 'box-none'}>
             <Button3D variant="primary" label={t('common.continue')} onPress={goNext} />
           </View>
         </>
@@ -693,6 +919,7 @@ export default function GameScreen() {
           <Text style={styles.popTitle}>{dailyResult.result.alreadyDone ? t('game.alreadyDone') : t('game.challengeDone')}</Text>
           <Text style={styles.popBody}>{t('daily.streak', { count: dailyResult.result.streak })}</Text>
           <Text style={styles.popBody}>{t('game.scoreLine', { score: formatNumber(dailyResult.score.total) })}</Text>
+          {!loadoutLater && <LoadoutOffer day={today} onLater={() => setLoadoutLater(true)} />}
           <PrimaryButton
             label={t('common.continue')}
             onPress={() => {
@@ -707,7 +934,7 @@ export default function GameScreen() {
       {noLife && <NoLivesCard />}
       <HeartPop trigger={heartKey} />
 
-      {menuOpen && <PauseMenu title={t('settings.title')} lines={level ? [daily ? t('hud.dailyTitle') : t('hud.level', { id: level.id }), shownLimit !== null ? t('game.movesOf', { moves, limit: shownLimit }) : t('game.moves', { count: moves })] : []} actions={pauseActions} toggles={pauseToggles} onClose={() => setMenuOpen(false)} />}
+      {menuOpen && <PauseMenu title={t('settings.title')} lines={level ? [daily ? t('hud.dailyTitle') : t('hud.level', { id: level.id }), shownLimit !== null ? t('game.movesOf', { moves, limit: shownLimit }) : t('game.moves', { count: moves })] : []} actions={pauseActions} toggles={pauseToggles} dev={pauseDev} onClose={() => setMenuOpen(false)} />}
 
       {popup?.kind === 'hint' && <HintChoice coins={profile.coins} free={profile.freeHints} onCoins={hintWithCoins} onAd={hintWithAd} onCancel={() => setPopup(null)} />}
       {popup?.kind === 'confirmRestart' && (
@@ -724,7 +951,64 @@ export default function GameScreen() {
       )}
       {popup?.kind === 'outOfMoves' && shownLimit !== null && <OutOfMoves limit={shownLimit} adUsed={adMovesUsed.current} lifeAtStake={atStake} onAd={moreMovesWithAd} onCoins={moreMovesWithCoins} onGiveUp={giveUp} />}
       {popup?.kind === 'saveStreak' && <SaveStreak streak={popup.value} onAd={saveStreakWithAd} onCoins={saveStreakWithCoins} onLose={() => finishLoss(false)} />}
-      {testerTools() && null}
+      {popup?.kind === 'world' && <WorldUnlock levelId={popup.levelId} onClose={() => setPopup(null)} />}
+      {popup?.kind === 'starter' && <StarterPackOffer onClose={() => setPopup(null)} />}
+      {popup?.kind === 'trialEnd' && <TrialEndCard itemId={popup.itemId} onClose={() => setPopup(null)} />}
+      {popup?.kind === 'reward' && (
+        <Overlay onDismiss={() => setPopup(null)}>
+          <Text style={styles.popKicker}>{t('game.worldReward')}</Text>
+          <Text style={styles.popTitle}>{itemName(popup.item.id)}</Text>
+          <Text style={styles.popBody}>{t(popup.item.kind === 'ball' ? 'game.newBallInShop' : 'game.newPaintInShop')}</Text>
+          <PrimaryButton label={t('common.great')} onPress={() => setPopup(null)} />
+        </Overlay>
+      )}
+      {popup?.kind === 'step' && (
+        <StepEnd
+          step={popup.step}
+          coins={popup.coins}
+          progress={popup.progress}
+          onDouble={doubleChest}
+          onClose={() => {
+            // The tour offer that was waiting for the chest comes next.
+            const offer = pendingTour.current;
+            pendingTour.current = false;
+            setPopup(offer ? { kind: 'tourIntro' } : null);
+            const paywall = pendingPaywall.current;
+            pendingPaywall.current = null;
+            if (paywall && !offer) {
+              updateProfile((p) => noteAutoOffer(p, Date.now()));
+              setTimeout(() => router.push({ pathname: '/vip', params: { source: paywall } }), 350);
+            }
+          }}
+        />
+      )}
+      {popup?.kind === 'tourIntro' && (
+        <Overlay>
+          <OutlineText style={styles.popTitle} width={2.5}>
+            {t('game.basicsDone')}
+          </OutlineText>
+          <Text style={styles.popBody}>{t('game.tourQuestion')}</Text>
+          <PrimaryButton
+            label={t('game.letsGo')}
+            onPress={() => {
+              setPopup(null);
+              setTimeout(startTour, 300);
+            }}
+          />
+          <Pressable
+            onPress={() => {
+              updateProfile(postponeTour);
+              setPopup(null);
+              // The player put the tour off: the whole header comes in, one pop after the other.
+              releaseHud(true);
+            }}
+            style={styles.laterHit}
+            accessibilityRole="button"
+          >
+            <Text style={styles.later}>{t('common.later')}</Text>
+          </Pressable>
+        </Overlay>
+      )}
     </View>
   );
 }
@@ -739,7 +1023,10 @@ const styles = StyleSheet.create({
   hintCostText: { color: colors.text, fontSize: fontSizes.sm, fontWeight: '800' },
   hand: { position: 'absolute', width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   handText: { fontSize: 38 },
-  moves: { color: colors.textSoft, fontSize: fontSizes.sm, fontWeight: '800' },
+  fps: { position: 'absolute', left: 12, right: 12, padding: 6, borderRadius: 8, backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+  fpsText: { color: '#9dffb0', fontSize: 11, fontWeight: '700' },
+  laterHit: { paddingVertical: 10, paddingHorizontal: 24 },
+  later: { color: colors.textSoft, fontSize: fontSizes.md, fontWeight: '700', textDecorationLine: 'underline' },
   toast: { position: 'absolute', top: '45%', left: 24, right: 24, alignItems: 'center' },
   toastText: { color: colors.text, fontSize: fontSizes.md, fontWeight: '800', textAlign: 'center', backgroundColor: 'rgba(18, 12, 34, 0.85)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, overflow: 'hidden' },
   popKicker: { color: colors.gold, fontSize: fontSizes.sm, fontWeight: '800', textAlign: 'center' },
