@@ -1,4 +1,4 @@
-import { DELTA, axisOf, type Dir } from '../core/grid';
+import { DELTA, OPPOSITE, axisOf, type Dir } from '../core/grid';
 
 export { DELTA, DIRS, OPPOSITE, axisOf, type Cell, type Dir } from '../core/grid';
 
@@ -27,8 +27,11 @@ export const OBSTACLE_KINDS: readonly ObstacleKind[] = ['post', 'planter', 'boll
 export const VEHICLE_COLORS = 12;
 
 /**
- * A vehicle: 2 cells (car) or 3 cells (truck) in a line. `r`, `c` is its top-left cell; `dir` is where its front points, which
- * also gives its axis (L / R = horizontal, U / D = vertical). It can leave the lot through either end of its axis.
+ * A vehicle: 2 cells (car) or 3 cells (truck) in a line, one cell wide. `r`, `c` is its top-left cell; `dir` is where its front
+ * points, which also gives its axis (L / R = horizontal, U / D = vertical).
+ *
+ * A vehicle has ONE way to go, painted as an arrow on its roof: toward its front, or (`back`) toward its rear, in which case it
+ * reverses out. A tap sends it that way; it can never go the other way.
  */
 export type Vehicle = {
   id: number;
@@ -37,6 +40,8 @@ export type Vehicle = {
   dir: Dir;
   len: 2 | 3;
   color: number;
+  /** True when the arrow points to the rear: the vehicle reverses. */
+  back?: boolean;
 };
 
 export type Obstacle = { r: number; c: number; kind: ObstacleKind };
@@ -47,8 +52,11 @@ export type Obstacle = { r: number; c: number; kind: ObstacleKind };
  */
 export type Gate = { side: Dir; from: number; to: number; need: number };
 
-/** A one-way lane: vehicles of this row / column may only leave toward `dir`. The arrow is painted on the edge cell on that side. */
-export type OneWay = { dir: Dir; lane: number };
+/**
+ * A one-way arrow painted on a place: a vehicle may only drive over this place in the direction of the arrow; going over it in
+ * any other direction is as good as hitting a wall. No vehicle is parked on it.
+ */
+export type OneWay = { r: number; c: number; dir: Dir };
 
 export type LotShape = 'rect' | 'L' | 'cross' | 'islands';
 
@@ -65,7 +73,7 @@ export type Level = {
   oneWays: OneWay[];
   /** Vehicle ids in an order that empties the lot without a single collision (worked out by the solver). */
   solution: number[];
-  /** The fewest moves: one per vehicle. */
+  /** The fewest moves: one tap per vehicle. */
   optimal: number;
   difficulty: number;
   /** Rounds of removal when every free vehicle leaves at each round. */
@@ -74,10 +82,12 @@ export type Level = {
   avgFree: number;
   /** Mean length of the chains of blocking vehicles. */
   avgChain: number;
-  /** Vehicles that look free (a long empty run) but are blocked both ways. */
+  /** Vehicles that look free (their other way is clear) but are blocked where their arrow points. */
   traps: number;
   /** Share of the places taken by vehicles, 0..1. */
   fill: number;
+  /** Share of the vehicles that can leave at the start, 0..1. */
+  freeStart: number;
   shape: LotShape;
   mechanics: Mechanic[];
   /** Set on the first level of a mechanic: shows its one-time explanation. */
@@ -94,11 +104,8 @@ export function vehicleCells(v: Vehicle): [number, number][] {
   return out;
 }
 
-/** The two directions a vehicle can drive in: [forward, backward]. */
-export function vehicleDirs(v: Pick<Vehicle, 'dir'>): [Dir, Dir] {
-  const d = v.dir;
-  return [d, d === 'L' ? 'R' : d === 'R' ? 'L' : d === 'U' ? 'D' : 'U'];
-}
+/** The way a vehicle drives when tapped: toward its front, or toward its rear when it reverses. */
+export const travelDir = (v: Pick<Vehicle, 'dir' | 'back'>): Dir => (v.back ? OPPOSITE[v.dir] : v.dir);
 
 /** The cell at the head of a vehicle driving in `dir`. */
 export function leadCell(v: Vehicle, dir: Dir): [number, number] {

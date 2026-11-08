@@ -24,7 +24,7 @@ Fais sortir les voitures d’un parking embouteillé et laisse une traînée de 
 
 Libère les voitures, peins la route !
 
-Paint Parking est un jeu de réflexion apaisant : glisse le doigt sur une voiture, elle sort du parking en laissant une traînée de peinture. Mais si un autre véhicule est sur son chemin, elle klaxonne, le percute et revient. Vide le parking sans aucune collision pour décrocher 3 étoiles.
+Paint Parking est un jeu de réflexion apaisant : touche une voiture, elle sort du parking dans le sens de sa flèche en laissant une traînée de peinture. Mais si un autre véhicule est sur son chemin, elle klaxonne, le percute et revient. Vide le parking sans aucune collision pour décrocher 3 étoiles.
 
 • Des centaines de niveaux, de plus en plus malins : obstacles fixes, camions, barrières qui s'ouvrent quand assez de voitures sont sorties, flèches de sens unique…
 • Un défi du jour inédit, 365 jours par an, avec son véhicule et sa peinture surprises. Garde ta série !
@@ -48,7 +48,7 @@ Politique de confidentialité : https://yalex-ctrl.github.io/paint-parking-site/
 
 ## Textes des 5 captures d'écran
 
-1. Glisse, peins, sors !
+1. Touche, sors, peins !
 2. Des centaines de niveaux malins
 3. Un défi du jour chaque jour
 4. Collectionne véhicules et peintures

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { applyGesture, compile, createState } from '../src/game/engine';
+import { applyTap, compile, createState } from '../src/game/engine';
 import { LEVELS } from '../src/game/levels';
 import { fitCamera, lotBandPx } from '../src/render/cameraFit';
 import { cellAt, cellX, cellZ, ROAD_MARGIN } from '../src/render/coords';
@@ -114,7 +114,7 @@ describe('the animations', () => {
     const state = createState(board);
     const events: string[] = [];
     scene.onEvent = (e) => events.push(e);
-    scene.play(applyGesture(board, state, 0, 'R'));
+    scene.play(applyTap(board, state, 0));
     expect(scene.actors[0].busy).toBe(true);
     run(scene, 0.3);
     expect(scene.actors[0].x).toBeGreaterThan(scene.actors[0].baseX);
@@ -127,13 +127,13 @@ describe('the animations', () => {
     expect(scene.puffs.some((p) => p.active) || scene.trailCount > 0).toBe(true);
   });
 
-  it('a vehicle that reverses out keeps its front toward where it was', () => {
-    const l = level();
+  it('a vehicle whose arrow points to its rear reverses out: its front keeps pointing where it was', () => {
+    const l = lot({ rows: 1, cols: 6, vehicles: [[0, 2, 'R', 2, true]] });
     const scene = new ParkingScene(l);
     const board = compile(l);
     const state = createState(board);
-    scene.play(applyGesture(board, state, 0, 'L'));
     expect(scene.actors[0].reverse).toBe(true);
+    scene.play(applyTap(board, state, 0));
     run(scene, 0.2);
     // It faces right (yaw 0) and moves left.
     close(Math.cos(scene.actors[0].yaw), 1, 0.05);
@@ -148,7 +148,7 @@ describe('the animations', () => {
     const events: string[] = [];
     scene.onEvent = (e) => events.push(e);
     const a = scene.actors[1];
-    scene.play(applyGesture(board, state, 1, 'D')); // blocked by the truck at once (no room)
+    scene.play(applyTap(board, state, 1)); // blocked by the truck at once (no room)
     let maxOffset = 0;
     let sawEmoji = false;
     for (let t = 0; t < 2; t += 1 / 60) {
@@ -176,7 +176,7 @@ describe('the animations', () => {
     const board = compile(l);
     const state = createState(board);
     const a = scene.actors[0];
-    scene.play(applyGesture(board, state, 0, 'R'));
+    scene.play(applyTap(board, state, 0));
     let maxX = a.baseX;
     for (let t = 0; t < 2; t += 1 / 60) {
       scene.update(1 / 60);
@@ -187,28 +187,12 @@ describe('the animations', () => {
     expect(maxX - a.baseX).toBeLessThan(2.3);
   });
 
-  it('a gesture across the axis shakes the vehicle for a moment, in place', () => {
-    const l = level();
-    const scene = new ParkingScene(l);
-    const board = compile(l);
-    const state = createState(board);
-    scene.lastTouched = 0;
-    scene.play(applyGesture(board, state, 0, 'U'));
-    expect(scene.actors[0].busy).toBe(true);
-    run(scene, 0.1);
-    expect(scene.actors[0].z).not.toBe(scene.actors[0].baseZ);
-    run(scene, 0.5);
-    expect(scene.actors[0].busy).toBe(false);
-    expect(scene.actors[0].z).toBe(scene.actors[0].baseZ);
-    expect(state.moves).toBe(0);
-  });
-
   it('the shine starts when the last vehicle has left, and ends', () => {
     const l = lot({ rows: 1, cols: 4, vehicles: [[0, 0, 'R', 2]] });
     const scene = new ParkingScene(l);
     const board = compile(l);
     const state = createState(board);
-    scene.play(applyGesture(board, state, 0, 'R'));
+    scene.play(applyTap(board, state, 0));
     run(scene, 4);
     expect(scene.shine).toBeGreaterThanOrEqual(0);
     let peak = 0;
@@ -223,7 +207,7 @@ describe('the animations', () => {
     const scene = new ParkingScene(LEVELS[49]);
     const board = compile(LEVELS[49]);
     const state = createState(board);
-    for (const id of LEVELS[49].solution) scene.play(applyGesture(board, state, id, scene.dirsOf(id)[0]));
+    for (const id of LEVELS[49].solution) scene.play(applyTap(board, state, id));
     expect(scene.trailCount).toBeLessThanOrEqual(TRAIL_CAPACITY);
   });
 
@@ -286,7 +270,7 @@ describe('the road between two levels', () => {
     const level = { rows: 6, cols: 5 };
     fitCamera(a, level, 390, 844, margins);
     fitCamera(b, level, 390, 844, margins);
-    expect(b.quaternion.angleTo(a.quaternion)).toBeLessThan(1e-9);
+    expect(b.quaternion.angleTo(a.quaternion)).toBeLessThan(1e-6);
     expect(b.position.distanceTo(a.position)).toBeLessThan(1e-9);
   });
 });

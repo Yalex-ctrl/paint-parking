@@ -51,6 +51,11 @@ export function buildLotGeometry(level: Level): THREE.BufferGeometry {
   parts.push(box(SIDEWALK, 0.1, hd * 2, -(hw + SIDEWALK / 2), swY, 0, C.sidewalk));
   parts.push(box(SIDEWALK, 0.1, hd * 2, hw + SIDEWALK / 2, swY, 0, C.sidewalk));
 
+  // The way out: the road goes on past the corner of the lot, straight away from it, across the grass (it is seen above the lot).
+  const exitX = hw + mid;
+  parts.push(box(roadOut - roadIn, 0.4, 40, exitX, 0.024 - 0.2, -(hd + mid) - 20, C.road));
+  for (let z = -(hd + mid) - 1; z > -(hd + mid) - 40; z -= 0.9) parts.push(box(0.07, 0.01, 0.45, exitX, 0.03, z, C.roadDash));
+
   const isVoid = new Set(level.voids.map(([r, c]) => r * cols + c));
   // The places: each cell a slab of grey-violet asphalt, two shades chosen at random so it is not flat.
   for (let r = 0; r < rows; r++) {
@@ -77,9 +82,8 @@ export function buildLotGeometry(level: Level): THREE.BufferGeometry {
   for (const o of level.obstacles) addObstacle(parts, level, o);
 
   for (const w of level.oneWays) {
-    const horizontal = w.dir === 'L' || w.dir === 'R';
-    const r = horizontal ? w.lane : w.dir === 'D' ? rows - 1 : 0;
-    const c = horizontal ? (w.dir === 'R' ? cols - 1 : 0) : w.lane;
+    // A painted arrow on a place: a vehicle may only drive over it the way it shows.
+    const { r, c } = w;
     const [dr, dc] = DELTA[w.dir];
     parts.push(
       flatShape(

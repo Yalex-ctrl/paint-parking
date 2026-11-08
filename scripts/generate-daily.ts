@@ -31,7 +31,7 @@ for (let n = from; n <= to; n++) {
   let level: Level | null = null;
   for (let less = 0; less < 6 && !level; less++) {
     try {
-      level = buildLevel(n, { recipe, target: targetDifficulty(45) + (n % 5) * 1.5, attempts: 300, tolerance: 1.5, minDifficulty: 22 - 2 * less });
+      level = buildLevel(n, { recipe, target: targetDifficulty(45) + (n % 5) * 1.5, attempts: 250, tolerance: 2, minDifficulty: 26 - 2 * less });
     } catch {
       // Nothing that hard fits this shape: accept a little less.
     }

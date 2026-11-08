@@ -168,7 +168,7 @@
     "gift": "Voici {{count}} pièces pour bien commencer.",
     "steps": {
       "steps": "Chaque niveau réussi coche une case. Au bout de 5 : un coffre rempli de pièces !",
-      "moves": "Chaque véhicule sort en un coup : zéro collision donne 3 ★.",
+      "moves": "Chaque voiture sort en un tap : zéro collision donne 3 ★.",
       "movesLimited": "Attention, le nombre de coups est limité !",
       "lives": "Tu as 5 vies. Tu en perds une si tu échoues. Elles reviennent toutes seules, une toutes les 30 minutes.",
       "streak": "Enchaîne les victoires : tes pièces sont multipliées jusqu’à ×2 !",
@@ -186,7 +186,7 @@
       "gallery": "Tes victoires révèlent des tableaux à collectionner.",
       "gifts": "Tes cadeaux : reviens souvent, il y a toujours quelque chose à récupérer !",
       "piggy": "Une partie de tes gains tombe dans la tirelire. Casse-la quand elle est bien remplie !",
-      "hint": "Bloqué ? L’indice te montre quel véhicule faire sortir."
+      "hint": "Bloqué ? L’indice entoure une voiture qui peut sortir."
     }
   },
   "hud": {
@@ -417,7 +417,7 @@
     "tipLabel": "ASTUCE",
     "tips": {
       "minimum": "Astuce : zéro collision donne 3 ★.",
-      "bends": "Un véhicule peut sortir par l’avant ou par l’arrière.",
+      "bends": "Chaque voiture a sa flèche : elle ne va que dans ce sens.",
       "streak": "Une série de victoires multiplie tes pièces.",
       "piggy": "Ta tirelire se remplit toute seule quand tu gagnes.",
       "stop": "Un obstacle ne bouge jamais : contourne-le.",
@@ -671,7 +671,7 @@
     "obstacle": "Les obstacles ne bougent jamais : contourne-les !",
     "truck": "Les camions sont plus longs : libère-leur de la place.",
     "gate": "La barrière s’ouvre quand assez de voitures sont sorties.",
-    "oneWay": "Respecte le sens de la flèche !"
+    "oneWay": "Respecte le sens de la flèche peinte au sol !"
   },
   "app": {
     "name": "Paint Parking"
@@ -723,7 +723,7 @@
     "impossible": "Impossible de finir en {{count}} coups, recommence",
     "noHint": "Pas d’indice : recommence le niveau",
     "allPainted": "Tout est peint : rejoins la sortie !",
-    "swipeToMove": "Glisse un véhicule pour le faire sortir",
+    "swipeToMove": "Touche une voiture libre pour la faire sortir",
     "tryAgain": "Recommence, tu vas y arriver !",
     "hint": "Indice",
     "alreadyDone": "Déjà réussi aujourd’hui",

@@ -3,8 +3,8 @@ import type { Gate, Level, Obstacle, OneWay, Vehicle } from '../src/game/types';
 type Spec = {
   rows: number;
   cols: number;
-  /** [row, col, front direction, length] */
-  vehicles: [number, number, Vehicle['dir'], 2 | 3][];
+  /** [row, col, front direction, length, true when the arrow points to the rear (the vehicle reverses)] */
+  vehicles: [number, number, Vehicle['dir'], 2 | 3, boolean?][];
   obstacles?: [number, number][];
   voids?: [number, number][];
   gates?: Gate[];
@@ -21,7 +21,7 @@ export function lot(spec: Spec): Level {
     cols: spec.cols,
     voids: spec.voids ?? [],
     obstacles,
-    vehicles: spec.vehicles.map(([r, c, dir, len], id) => ({ id, r, c, dir, len, color: id % 12 })),
+    vehicles: spec.vehicles.map(([r, c, dir, len, back], id) => ({ id, r, c, dir, len, color: id % 12, ...(back ? { back: true } : {}) })),
     gates: spec.gates ?? [],
     oneWays: spec.oneWays ?? [],
     solution: [],
@@ -32,6 +32,7 @@ export function lot(spec: Spec): Level {
     avgChain: 0,
     traps: 0,
     fill: 0,
+    freeStart: 0,
     shape: 'rect',
     mechanics: [],
   };

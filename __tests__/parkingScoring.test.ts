@@ -1,7 +1,7 @@
 import { MONETIZATION } from '../src/core/config/monetization';
 import { SCORING } from '../src/core/config/scoring';
 import { levelScore, movePoints, targetSeconds, timePoints } from '../src/core/points';
-import { applyGesture, compile, createState } from '../src/game/engine';
+import { applyTap, compile, createState } from '../src/game/engine';
 import { GUIDE_IDLE_MS, guideMode, hintAvailable, nextHint } from '../src/game/guide';
 import { LEVELS } from '../src/game/levels';
 import { activeLimit, levelScoring, moveLimit, recomputeStars, starsFor, twoStarMoves } from '../src/game/scoring';
@@ -98,9 +98,8 @@ describe('the help of the first levels', () => {
       while (!state.finished && guard++ < 100) {
         const hint = nextHint(board, state)!;
         expect(hint).not.toBeNull();
-        const r = applyGesture(board, state, hint.vehicle, hint.dir);
+        const r = applyTap(board, state, hint.vehicle);
         expect({ id: l.id, kind: r.kind }).toEqual({ id: l.id, kind: 'exit' });
-        if (hint.tap) expect(hint.dir).toBe(l.vehicles[hint.vehicle].dir);
       }
       expect(state.finished).toBe(true);
       expect(state.collisions).toBe(0);

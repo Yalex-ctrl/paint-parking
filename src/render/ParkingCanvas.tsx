@@ -1,19 +1,18 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { PixelRatio } from 'react-native';
+import { PixelRatio, View } from 'react-native';
 import { Canvas, useFrame, useThree } from '@react-three/fiber/native';
 import * as THREE from 'three';
 
-import { DECOR_MODELS } from '../core/render/decor/catalog';
 import { getDecorLibrary, preloadDecor, type DecorLibrary, type DecorPart } from '../core/render/decor/models';
 import { MAX_PIXEL_RATIO, useQuality } from '../core/render/perf';
 import { PerfMonitor } from './PerfMonitor';
-import { createRng } from '../core/rng';
-import { DELTA } from '../core/grid';
 import type { Level } from '../game/types';
 import { fitCamera, type Margins } from './cameraFit';
-import { cellAt, linkOffset, PLATE_MARGIN, ROAD_MARGIN, ROAD_W, SIDEWALK, SLAB_H, VEHICLE_H } from './coords';
+import { decorKey, planDecor, type Placed } from './decorPlan';
+import { screenToGround } from './pick';
+import { linkOffset, PLATE_MARGIN, ROAD_MARGIN, ROAD_W, SLAB_H, VEHICLE_H } from './coords';
 import { digitTexture, emojiTexture } from './textures';
-import { crownGeometry, lightsGeometry, shadowGeometry, carGeometry, skinGeometry } from './vehicleGeometry';
+import { arrowGeometry, crownGeometry, lightsGeometry, roofTop, shadowGeometry, carGeometry, skinGeometry } from './vehicleGeometry';
 import { specOf, type Finish } from './skinSpecs';
 import { buildLotGeometry, gateGeometry } from './lotGeometry';
 import { box, merge } from './geo';
@@ -28,28 +27,21 @@ export type PickBridge = {
   camera: THREE.PerspectiveCamera | null;
   width: number;
   height: number;
-  /** The grid cell under a point of the canvas (pixels), or null when it is outside the lot. */
-  pick: (x: number, y: number) => [number, number] | null;
+  /** The point of the ground (world x, z) under a point of the canvas (pixels), or null. */
+  ground: (x: number, y: number) => { x: number; z: number } | null;
   /** The pixel under a point of the ground (to put the help hand on a vehicle). */
   toScreen: (x: number, z: number, y?: number) => { x: number; y: number } | null;
 };
 
-export function createPickBridge(level: () => Level): PickBridge {
-  const ray = new THREE.Raycaster();
-  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.25);
-  const hit = new THREE.Vector3();
-  const ndc = new THREE.Vector2();
+export function createPickBridge(): PickBridge {
   const p = new THREE.Vector3();
   const bridge: PickBridge = {
     camera: null,
     width: 0,
     height: 0,
-    pick(x, y) {
+    ground(x, y) {
       if (!bridge.camera || bridge.width === 0) return null;
-      ndc.set((x / bridge.width) * 2 - 1, -(y / bridge.height) * 2 + 1);
-      ray.setFromCamera(ndc, bridge.camera);
-      if (!ray.ray.intersectPlane(plane, hit)) return null;
-      return cellAt(level(), hit.x, hit.z);
+      return screenToGround(bridge.camera, bridge.width, bridge.height, x, y);
     },
     toScreen(x, z, y = 0.3) {
       if (!bridge.camera || bridge.width === 0) return null;
@@ -93,6 +85,7 @@ let shared: {
   carShadow: THREE.BufferGeometry;
   truckShadow: THREE.BufferGeometry;
   crown: THREE.BufferGeometry;
+  arrow: THREE.BufferGeometry;
   body: THREE.MeshLambertMaterial;
   lit: THREE.MeshBasicMaterial;
   shadow: THREE.MeshBasicMaterial;
@@ -115,6 +108,7 @@ function sharedAssets() {
     carShadow: shadowGeometry(2),
     truckShadow: shadowGeometry(3),
     crown: crownGeometry(),
+    arrow: arrowGeometry(),
     body: new THREE.MeshLambertMaterial({ vertexColors: true }),
     lit: new THREE.MeshBasicMaterial({ vertexColors: true }),
     shadow: new THREE.MeshBasicMaterial({ color: '#1a1530', transparent: true, opacity: 0.28, depthWrite: false }),
@@ -178,7 +172,7 @@ function Lot({ level, scene }: { level: Level; scene: ParkingScene }) {
     <group>
       <mesh geometry={geometry} material={lot} />
       {gates.map((g, i) => (
-        <Gate key={i} level={level} scene={scene} index={i} info={g} />
+        <Gate key={`gate-${level.gates[i].side}-${level.gates[i].from}-${level.gates[i].to}`} level={level} scene={scene} index={i} info={g} />
       ))}
       <mesh position={[0, -SLAB_H - 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[90, 90]} />
@@ -242,10 +236,32 @@ const _s = new THREE.Vector3(1, 1, 1);
 const _q = new THREE.Quaternion();
 const _q2 = new THREE.Quaternion();
 const _q3 = new THREE.Quaternion();
+const _q4 = new THREE.Quaternion();
+const _v = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
 const Z = new THREE.Vector3(0, 0, 1);
 const X = new THREE.Vector3(1, 0, 0);
 const _c = new THREE.Color();
+
+/** Lays the arrow of every vehicle on its roof: it follows the vehicle (and its tilt) and points the way it goes. */
+function writeArrows(actors: Actor[], mesh: THREE.InstancedMesh | null, dressedId: number, dressedRoof: number) {
+  if (!mesh) return;
+  for (let i = 0; i < actors.length; i++) {
+    const a = actors[i];
+    // A vehicle that reverses has its arrow toward its rear.
+    _q.setFromAxisAngle(Y, a.yaw);
+    _q2.setFromAxisAngle(Z, -a.pitch);
+    _q3.setFromAxisAngle(X, a.roll);
+    _q.multiply(_q2).multiply(_q3);
+    if (a.reverse) _q.multiply(_q4.setFromAxisAngle(Y, Math.PI));
+    const roof = a.len === 3 ? 0.745 : a.id === dressedId ? dressedRoof : 0.575;
+    _p.set(0, roof + 0.012, 0).applyQuaternion(_q).add(_v.set(a.x, 0.03, a.z));
+    _s.setScalar(a.hidden ? 0 : a.len === 3 ? 1.5 : 1.12);
+    _m.compose(_p, _q, _s);
+    mesh.setMatrixAt(i, _m);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+}
 
 /** Writes the matrices of a kind of vehicle (nothing is allocated: plain loops, shared temporaries). */
 function writeVehicles(list: Actor[], body: THREE.InstancedMesh | null, lights: THREE.InstancedMesh | null, shadow: THREE.InstancedMesh | null, dressedId: number) {
@@ -286,6 +302,7 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
     truckLights: useRef<THREE.InstancedMesh>(null),
     truckShadow: useRef<THREE.InstancedMesh>(null),
   };
+  const arrows = useRef<THREE.InstancedMesh>(null);
   const crown = useRef<THREE.Mesh>(null);
   const worn = useRef<THREE.Mesh>(null);
   const first = useRef(true);
@@ -313,6 +330,7 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
     const dressed = wornGeometry !== null ? scene.player : -1;
     writeVehicles(cars, refs.car.current, refs.carLights.current, refs.carShadow.current, dressed);
     writeVehicles(trucks, refs.truck.current, refs.truckLights.current, refs.truckShadow.current, dressed);
+    writeArrows(scene.actors, arrows.current, wornGeometry !== null ? scene.player : -1, roofTop(spec, player?.len ?? 2));
     const w = worn.current;
     if (w && player) {
       w.visible = !player.hidden;
@@ -347,6 +365,7 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
         </>
       )}
       {wornGeometry && <mesh ref={worn} geometry={wornGeometry} material={skinMaterial(spec.finish)} />}
+      <instancedMesh ref={arrows} args={[a.arrow, a.lit, scene.actors.length]} frustumCulled={false} renderOrder={1} />
       <mesh ref={crown} geometry={a.crown} material={a.lit} visible={scene.player >= 0} />
     </group>
   );
@@ -446,10 +465,11 @@ function Effects({ scene }: { scene: ParkingScene }) {
   );
 }
 
+/** The halo round the vehicle to tap (the hint and the help of the first levels). Not touchable: the touches go through. */
 function HintMarker({ scene }: { scene: ParkingScene }) {
   const group = useRef<THREE.Group>(null);
   const ring = useRef<THREE.Mesh>(null);
-  const arrow = useRef<THREE.Mesh>(null);
+  const fill = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     const g = group.current;
     if (!g) return;
@@ -457,59 +477,28 @@ function HintMarker({ scene }: { scene: ParkingScene }) {
     const actor = h ? scene.actors[h.vehicle] : null;
     g.visible = !!actor && !actor.hidden;
     if (!h || !actor || actor.hidden) return;
-    const t = clock.elapsedTime;
-    g.position.set(actor.x, 0.08, actor.z);
-    if (ring.current) {
-      const pulse = 1 + 0.14 * Math.sin(t * 6);
-      ring.current.scale.set(actor.len * 0.62 * pulse, actor.len * 0.62 * pulse, 1);
-    }
-    if (arrow.current) {
-      const [dr, dc] = DELTA[h.dir];
-      const bob = 0.35 + 0.18 * Math.sin(t * 7);
-      arrow.current.position.set(dc * (actor.len / 2 + bob), 0.45, dr * (actor.len / 2 + bob));
-      // The cone points along +Y; laid down it points along the heading.
-      arrow.current.rotation.set(dr !== 0 ? (dr > 0 ? Math.PI / 2 : -Math.PI / 2) : 0, 0, dc !== 0 ? (dc > 0 ? -Math.PI / 2 : Math.PI / 2) : 0);
-    }
+    const pulse = 1 + 0.1 * Math.sin(clock.elapsedTime * 6);
+    g.position.set(actor.x, 0.075, actor.z);
+    g.rotation.y = actor.baseYaw;
+    // An oval along the vehicle.
+    const sx = (actor.len * 0.9) / 2 + 0.2;
+    if (ring.current) ring.current.scale.set(sx * pulse, 0.74 * pulse, 1);
+    if (fill.current) fill.current.scale.set(sx * pulse, 0.74 * pulse, 1);
   });
   return (
     <group ref={group} visible={false}>
-      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.8, 1, 32]} />
-        <meshBasicMaterial color="#ffe14a" transparent opacity={0.85} depthWrite={false} />
+      <mesh ref={fill} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+        <circleGeometry args={[1, 32]} />
+        <meshBasicMaterial color="#ffe14a" transparent opacity={0.28} depthWrite={false} />
       </mesh>
-      <mesh ref={arrow}>
-        <coneGeometry args={[0.22, 0.5, 8]} />
-        <meshBasicMaterial color="#ffe14a" />
+      <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+        <ringGeometry args={[0.9, 1, 40]} />
+        <meshBasicMaterial color="#ffe14a" transparent opacity={0.95} depthWrite={false} />
       </mesh>
     </group>
   );
 }
-
 /* ----------------------------------------------------------------------------------------- scenery */
-
-type Placed = { name: string; x: number; z: number; scale: number; rot: number };
-
-/** Trees, bushes and stones round the plate, always outside it; the same for the same level. */
-export function planDecor(level: Level): Placed[] {
-  const rng = createRng(level.seed ^ 0x51ed270b);
-  const hw = level.cols / 2 + SIDEWALK + ROAD_W + 0.25;
-  const hd = level.rows / 2 + SIDEWALK + ROAD_W + 0.25;
-  const pool = DECOR_MODELS.filter((m) => m.kind === 'tree' || m.kind === 'bush' || m.kind === 'stone' || m.kind === 'flower');
-  const out: Placed[] = [];
-  let guard = 0;
-  while (out.length < 14 && guard++ < 200) {
-    const model = rng.pick(pool);
-    const angle = rng.next() * Math.PI * 2;
-    // A point on a ring a little beyond the plate (a rounded rectangle).
-    const reach = 1.2 + rng.next() * 5;
-    const x = Math.cos(angle) * (hw + reach);
-    const z = Math.sin(angle) * (hd + reach);
-    if (Math.abs(x) < hw + model.radius * 2 && Math.abs(z) < hd + model.radius * 2) continue;
-    if (out.some((o) => Math.hypot(o.x - x, o.z - z) < 1.1)) continue;
-    out.push({ name: model.name, x, z, scale: model.scale[0] + rng.next() * (model.scale[1] - model.scale[0]), rot: rng.next() * Math.PI * 2 });
-  }
-  return out;
-}
 
 function useDecorLibrary(enabled: boolean): DecorLibrary | null {
   const [library, setLibrary] = useState<DecorLibrary | null>(getDecorLibrary());
@@ -557,9 +546,7 @@ function Decor({ level, enabled }: { level: Level; enabled: boolean }) {
   if (!library) return null;
   return (
     <group>
-      {groups.map(([name, placements]) =>
-        (library.get(name) ?? []).map((part, i) => <PartInstances key={`${name}-${i}-${placements.length}`} part={part} placements={placements} />),
-      )}
+      {groups.flatMap(([name, placements]) => (library.get(name) ?? []).map((part, i) => <PartInstances key={decorKey(name, i, placements.length)} part={part} placements={placements} />))}
     </group>
   );
 }
@@ -657,6 +644,7 @@ function Scene({ level, scene, next, transition, onTransitionDone, bridge, margi
  */
 function ParkingCanvasImpl(props: Props) {
   return (
+    <View style={{ flex: 1 }} pointerEvents="none">
     <Canvas
       style={{ flex: 1 }}
       flat
@@ -673,6 +661,7 @@ function ParkingCanvasImpl(props: Props) {
     >
       <Scene {...props} />
     </Canvas>
+    </View>
   );
 }
 

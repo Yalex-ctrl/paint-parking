@@ -1,15 +1,11 @@
-import { freeVehicles, openDirs, type Board, type GameState } from './engine';
-import type { Dir } from '../core/grid';
+import { freeVehicles, type Board, type GameState } from './engine';
 
 /**
- * Help for beginners and the hint. Both point at a vehicle that can leave right now and the way it leaves (the solver's order
- * decides which one), so following them never causes a collision.
+ * Help for beginners and the hint. Both point at a vehicle that can leave right now (the solver's order decides which one), so
+ * tapping it never causes a collision.
  */
 export type Hint = {
   vehicle: number;
-  dir: Dir;
-  /** True when a tap does it (the vehicle leaves forward); otherwise a swipe backward is needed. */
-  tap: boolean;
 };
 
 /** After this long without a move (ms), the levels 2-5 show the help. */
@@ -29,13 +25,9 @@ export function guideMode(levelId: number): 'always' | 'idle' | 'off' {
 
 export const hintAvailable = (levelId: number): boolean => levelId >= HINT_FROM_LEVEL;
 
-/** The next vehicle to move: the first of the solution that is free now, forward if it can. Null when the lot is empty. */
+/** The next vehicle to tap: the first of the solution that is free now. Null when the lot is empty. */
 export function nextHint(board: Board, state: GameState): Hint | null {
   const free = freeVehicles(board, state);
   if (free.length === 0) return null;
-  const inOrder = board.level.solution.find((id) => free.includes(id)) ?? free[0];
-  const open = openDirs(board, state, inOrder);
-  const forward = board.level.vehicles[inOrder].dir;
-  const dir = open.includes(forward) ? forward : open[0];
-  return { vehicle: inOrder, dir, tap: dir === forward };
+  return { vehicle: board.level.solution.find((id) => free.includes(id)) ?? free[0] };
 }

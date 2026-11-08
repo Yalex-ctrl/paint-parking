@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
-import { DELTA, type Dir } from '../core/grid';
-import type { GestureResult } from '../game/engine';
-import { isHorizontal, vehicleCells, vehicleDirs, type Level } from '../game/types';
+import { DELTA } from '../core/grid';
+import type { TapResult } from '../game/engine';
+import { isHorizontal, vehicleCells, type Level } from '../game/types';
 import { cellX, cellZ } from './coords';
 import { ACCEL, distanceAt, exitPath, samplePath, yawOf, type ExitPath, type Pose } from './paths';
 import { VEHICLE_PALETTE } from './palette';
@@ -12,13 +12,12 @@ import { createRng } from '../core/rng';
  * Everything that moves in the parking, kept out of React: the scene reads these numbers every frame and nothing is allocated while
  * the game runs (the actors, the trail, the puffs and the emojis are made once per level and reused).
  */
-export type SceneEvent = 'exit' | 'bump' | 'horn' | 'shake' | 'gateOpen';
+export type SceneEvent = 'exit' | 'bump' | 'horn' | 'gateOpen';
 
 enum Mode {
   Idle,
   Exit,
   Bump,
-  Shake,
 }
 
 export type Actor = {
@@ -74,7 +73,6 @@ const BUMP_GAP = 0.1;
 const IMPACT_S = 0.24;
 const HOLD_S = 0.3;
 const RETURN_S = 0.42;
-const SHAKE_S = 0.32;
 const SHINE_S = 1.5;
 
 const pose: Pose = { x: 0, z: 0, yaw: 0 };
@@ -102,8 +100,8 @@ export class ParkingScene {
   player = -1;
   /** Seconds since the shine over the paint began, or -1. */
   shine = -1;
-  /** A hint to show: the vehicle and the way it should go. */
-  hint: { vehicle: number; dir: Dir } | null = null;
+  /** A hint to show: the vehicle to tap. */
+  hint: { vehicle: number } | null = null;
   onEvent: ((event: SceneEvent) => void) | null = null;
 
   private puffNext = 0;
@@ -132,7 +130,8 @@ export class ParkingScene {
         fz: dr,
         mx: 0,
         mz: 0,
-        reverse: false,
+        // A vehicle whose arrow points to its rear reverses out: it never turns round.
+        reverse: !!v.back,
         x,
         z,
         yaw: yawOf(dc, dr),
@@ -174,11 +173,8 @@ export class ParkingScene {
   }
 
   /** Starts the animation of a gesture the rules have just settled. */
-  play(result: GestureResult) {
-    if (result.kind === 'ignored') {
-      if (result.reason === 'offAxis') this.offAxis(this.lastTouched);
-      return;
-    }
+  play(result: TapResult) {
+    if (result.kind === 'ignored') return;
     const a = this.actors[result.vehicle];
     if (!a || a.busy) return;
     if (result.kind === 'exit') {
@@ -189,8 +185,6 @@ export class ParkingScene {
       a.laid = 0;
       const [dr, dc] = DELTA[result.dir];
       a.path = exitPath(this.level, a.x, a.z, result.dir);
-      // Driving against its front, the vehicle reverses out: it does not turn round.
-      a.reverse = dc * a.fx + dr * a.fz < 0;
       a.yaw = a.baseYaw;
       this.puff(a.x - dc * (a.len / 2), a.z - dr * (a.len / 2));
       this.onEvent?.('exit');
@@ -205,18 +199,6 @@ export class ParkingScene {
       a.mz = dr;
       a.other = result.blocker.type === 'vehicle' ? result.blocker.id : -1;
     }
-  }
-
-  /** Remembered so a gesture along the wrong axis can shake the vehicle that was touched. */
-  lastTouched = -1;
-
-  offAxis(vehicle: number) {
-    const a = this.actors[vehicle];
-    if (!a || a.busy) return;
-    a.mode = Mode.Shake;
-    a.busy = true;
-    a.t = 0;
-    this.onEvent?.('shake');
   }
 
   private puff(x: number, z: number) {
@@ -270,9 +252,6 @@ export class ParkingScene {
           break;
         case Mode.Bump:
           this.updateBump(a, dt);
-          break;
-        case Mode.Shake:
-          this.updateShake(a, dt);
           break;
         default:
           break;
@@ -391,26 +370,5 @@ export class ParkingScene {
     this.showEmoji(a.x, a.z);
   }
 
-  private updateShake(a: Actor, dt: number) {
-    a.t += dt;
-    const k = Math.min(1, a.t / SHAKE_S);
-    const decay = 1 - k;
-    const side = Math.sin(a.t * 55) * 0.07 * decay;
-    // Sideways, across the axis of the vehicle.
-    a.x = a.baseX + (a.horizontal ? 0 : side);
-    a.z = a.baseZ + (a.horizontal ? side : 0);
-    a.roll = Math.sin(a.t * 55) * 0.05 * decay;
-    if (a.t >= SHAKE_S) {
-      a.mode = Mode.Idle;
-      a.busy = false;
-      a.x = a.baseX;
-      a.z = a.baseZ;
-      a.roll = 0;
-    }
-  }
 
-  /** The directions a vehicle can be asked to go (for the hint arrow). */
-  dirsOf(vehicle: number): [Dir, Dir] {
-    return vehicleDirs(this.level.vehicles[vehicle]);
-  }
 }

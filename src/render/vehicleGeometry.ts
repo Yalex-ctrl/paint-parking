@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { SkinSpec } from './skinSpecs';
 
-import { box, cylinder, merge, sphere, wheel } from './geo';
+import { box, cylinder, flatShape, merge, sphere, wheel } from './geo';
 
 /**
  * The vehicles, low poly, made in code (the Kenney Car Kit could not be downloaded here: see docs/REUSE_PLAN.md). Each kind is one
@@ -17,7 +17,8 @@ const HEAD = '#fff3a8';
 const TAIL = '#a31822';
 
 /** Width of the vehicles and the room left around them in their cells. */
-export const WIDTH = 0.7;
+/** A vehicle is 78 % of a place wide and 90 % of its length long: the asphalt and the lines show all round it. */
+export const WIDTH = 0.78;
 const CELL_FILL = 0.9;
 
 export function carGeometry(len: 2 | 3): THREE.BufferGeometry {
@@ -28,10 +29,10 @@ export function carGeometry(len: 2 | 3): THREE.BufferGeometry {
   parts.push(box(L, 0.2, W, 0, 0.22, 0, BODY));
   if (len === 2) {
     // Cabin toward the rear: glass all round, a roof on top, the windscreen faces forward.
-    parts.push(box(L * 0.48, 0.2, W * 0.88, -L * 0.08, 0.42, 0, GLASS));
-    parts.push(box(L * 0.4, 0.05, W * 0.8, -L * 0.1, 0.54, 0, ROOF));
+    parts.push(box(L * 0.58, 0.2, W * 0.9, -L * 0.06, 0.42, 0, GLASS));
+    parts.push(box(L * 0.52, 0.05, W * 0.82, -L * 0.07, 0.54, 0, ROOF));
     // A pillar between the windscreen and the roof leans forward.
-    parts.push(box(0.06, 0.18, W * 0.84, L * 0.17, 0.42, 0, BODY));
+    parts.push(box(0.06, 0.18, W * 0.86, L * 0.24, 0.42, 0, BODY));
   } else {
     // Truck: a cab at the front and a box for the load behind it.
     parts.push(box(L * 0.3, 0.3, W * 0.96, L * 0.33, 0.47, 0, BODY));
@@ -97,10 +98,10 @@ export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
   if (len === 2) {
     const tall = spec.extras.includes('tallroof');
     const cabH = tall ? 0.4 : 0.2;
-    parts.push(box(L * 0.48, cabH, W * 0.88, x(-0.08), 0.32 + cabH / 2, 0, GLASS));
+    parts.push(box(L * 0.58, cabH, W * 0.9, x(-0.06), 0.32 + cabH / 2, 0, GLASS));
     if (spec.extras.includes('roundroof')) parts.push(sphere(0.3, x(-0.1), 0.5, 0, spec.roof));
-    else parts.push(box(L * 0.4, 0.05, W * 0.8, x(-0.1), 0.32 + cabH + 0.025, 0, spec.roof));
-    parts.push(box(0.06, cabH - 0.02, W * 0.84, x(0.17), 0.32 + cabH / 2, 0, spec.body));
+    else parts.push(box(L * 0.52, 0.05, W * 0.82, x(-0.07), 0.32 + cabH + 0.025, 0, spec.roof));
+    parts.push(box(0.06, cabH - 0.02, W * 0.86, x(0.24), 0.32 + cabH / 2, 0, spec.body));
   } else {
     parts.push(box(x(0.3), 0.3, W * 0.96, x(0.33), 0.47, 0, spec.body));
     parts.push(box(x(0.04), 0.17, W * 0.88, x(0.48), 0.5, 0, GLASS));
@@ -116,11 +117,11 @@ export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
   for (const e of spec.extras) {
     switch (e) {
       case 'lightbar':
-        parts.push(box(0.1, 0.06, 0.16, x(-0.1), top + 0.04, -0.12, '#e03a3a'));
-        parts.push(box(0.1, 0.06, 0.16, x(-0.1), top + 0.04, 0.12, '#3a6ae0'));
+        parts.push(box(0.1, 0.06, 0.16, x(-0.3), top + 0.04, -0.13, '#e03a3a'));
+        parts.push(box(0.1, 0.06, 0.16, x(-0.3), top + 0.04, 0.13, '#3a6ae0'));
         break;
       case 'sign':
-        parts.push(box(0.2, 0.08, 0.14, x(-0.1), top + 0.05, 0, '#fff7c2'));
+        parts.push(box(0.14, 0.08, 0.2, x(-0.3), top + 0.05, 0, '#fff7c2'));
         break;
       case 'cross':
         for (const side of [-1, 1]) {
@@ -129,12 +130,11 @@ export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
         }
         break;
       case 'ladder':
-        parts.push(box(L * 0.55, 0.04, 0.12, x(-0.2), top + 0.04, 0, '#c8ccd4'));
-        parts.push(box(L * 0.55, 0.04, 0.02, x(-0.2), top + 0.04, -0.06, '#8a8e96'));
+        for (const z of [-0.33, 0.33]) parts.push(box(L * 0.55, 0.05, 0.04, x(-0.2), top + 0.03, z, '#c8ccd4'));
         break;
       case 'cone':
-        parts.push(cylinder(0.11, 0, 0.2, x(-0.1), top - 0.02, 0, '#e8c07a', 8));
-        parts.push(sphere(0.12, x(-0.1), top + 0.26, 0, '#ff8fb8'));
+        parts.push(cylinder(0.09, 0, 0.16, x(-0.3), top - 0.02, 0, '#e8c07a', 8));
+        parts.push(sphere(0.1, x(-0.3), top + 0.2, 0, '#ff8fb8'));
         break;
       case 'spoiler':
         parts.push(box(0.1, 0.03, W * 0.9, -L / 2 + 0.06, 0.5, 0, spec.accent));
@@ -207,4 +207,28 @@ export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
     }
   }
   return merge(parts);
+}
+
+/* ------------------------------------------------------------------------------------------ the arrow on the roof */
+
+/** The big arrow painted on the roof of a vehicle, pointing along +X (its front): white with a dark outline, readable from afar. */
+export function arrowGeometry(): THREE.BufferGeometry {
+  const shape = (k: number, grow: number): [number, number][] => [
+    [-0.42 * k - grow, -0.1 * k - grow],
+    [0.06 * k, -0.1 * k - grow],
+    [0.06 * k, -0.25 * k - grow],
+    [0.46 * k + grow * 1.6, 0],
+    [0.06 * k, 0.25 * k + grow],
+    [0.06 * k, 0.1 * k + grow],
+    [-0.42 * k - grow, 0.1 * k + grow],
+  ];
+  return merge([flatShape(shape(1, 0.05), 0, 0, 0, 0, '#241d3d'), flatShape(shape(1, 0), 0, 0.006, 0, 0, '#ffffff')]);
+}
+
+/** How high the top of the roof of a vehicle is (where its arrow is laid). */
+export function roofTop(spec: SkinSpec | null, len: 2 | 3): number {
+  if (len === 3) return 0.745;
+  if (spec?.extras.includes("tallroof")) return 0.775;
+  if (spec?.extras.includes("roundroof")) return 0.62;
+  return 0.575;
 }

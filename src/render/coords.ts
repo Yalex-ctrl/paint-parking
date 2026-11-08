@@ -1,9 +1,9 @@
 import type { Level } from '../game/types';
 
 /** Width of the sidewalk (wood) around the lot. */
-export const SIDEWALK = 0.4;
+export const SIDEWALK = 0.35;
 /** Width of the road that goes round the sidewalk. */
-export const ROAD_W = 1.7;
+export const ROAD_W = 1.0;
 /** From the edge of the lot to the middle of the road. */
 export const ROAD_MARGIN = SIDEWALK + ROAD_W / 2;
 /** Thickness of the wooden plate the lot stands on (its top is the ground level, y = 0). */

@@ -18,15 +18,15 @@ puzzle,parking,cars,traffic,jam,paint,brain,logic,levels,challenge,color,relaxin
 
 **Promotional text (170 characters maximum)**
 
-Swipe the cars out of a jammed lot and leave a trail of paint! A new challenge every day, hundreds of levels, dozens of vehicles and paints to collect.
+Tap the cars out of a jammed lot and leave a trail of paint! A new challenge every day, hundreds of levels, dozens of vehicles and paints to collect.
 
 **Description**
 
 Free the cars, paint the road!
 
-Paint Parking is a soothing puzzle game: swipe a car and it drives out of the parking lot, leaving a trail of paint behind it. But if another vehicle is in the way, it honks, bumps and comes back. Empty the lot without a single collision for 3 stars.
+Paint Parking is a soothing puzzle game: tap a car and it drives out of the parking lot the way its arrow points, leaving a trail of paint behind it. But if another vehicle is in the way, it honks, bumps and comes back. Empty the lot without a single collision for 3 stars.
 
-• Hundreds of ever smarter levels: fixed obstacles, long trucks, barriers that open when enough cars have left, one-way arrows…
+• Hundreds of ever smarter levels: fixed obstacles, long trucks, barriers that open when enough cars have left, one-way arrows on the ground…
 • A brand-new daily challenge, 365 days a year, with its own surprise vehicle and paint. Keep your streak alive!
 • Dozens of vehicles and paints to unlock: taxi, police car, fire truck, golden car, galaxy…
 • Chests, gifts, a wheel of fortune and coins to earn just by playing.
@@ -48,7 +48,7 @@ Privacy Policy: https://yalex-ctrl.github.io/paint-parking-site/privacy.html
 
 ## The 5 screenshot captions
 
-1. Swipe, drive out, paint!
+1. Tap, drive out, paint!
 2. Hundreds of clever levels
 3. A new daily challenge
 4. Collect vehicles and paints

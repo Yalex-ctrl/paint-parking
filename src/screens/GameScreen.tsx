@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps -- the screen is imperative: the scene and the rules are mutated, the callbacks read refs. */
+/* eslint-disable react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization -- the screen is imperative: the scene and the rules are mutated, the callbacks read refs. */
 import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -72,20 +72,20 @@ import { markReady } from '@/core/ui/loadingStore';
 import { Text } from '@/core/ui/Text';
 import { colors, fontSizes } from '@/core/ui/theme';
 import { protectionOffered, resetStreak, saveWithAd, saveWithCoins } from '@/core/streak';
-import { applyGesture, compile, createState, type GameState } from '@/game/engine';
+import { applyTap, compile, createState, type GameState } from '@/game/engine';
+import { pickVehicle } from '@/render/pick';
+import { nextStage } from '@/render/stage';
 import { dailyLevelForDay, DAILY_LEVELS, levelOfId } from '@/game/dailyLevels';
 import { GUIDE_IDLE_MS, guideMode, hintAvailable, nextHint, type Hint } from '@/game/guide';
 import { activeLimit, recomputeStars, starsFor } from '@/game/scoring';
 import { optimalOf } from '@/game/levels';
 import { tutorialFor } from '@/game/mechanics';
-import type { Dir, Level, Tutorial } from '@/game/types';
+import type { Level, Tutorial } from '@/game/types';
 
 /** The header takes three rows (see components/LevelHud.tsx), then the bar of the stars. */
 const HEADER_H = 8 + 45 + 8 + 44 + 8 + 30;
 const STARS_H = 24;
 const BUTTONS_H = 80 + adsBannerHeight;
-/** Pixels of finger travel before a swipe counts. */
-const SWIPE_THRESHOLD = 18;
 /** How long the result stays before the next level comes (the player can go on sooner). */
 const RESULT_MS = 3200;
 
@@ -127,18 +127,16 @@ type End = {
   seconds: number;
 };
 
-/** The hand that shows which vehicle to swipe and which way: it moves over the vehicle in the direction to go, again and again. */
-function GuideHand({ x, y, dir }: { x: number; y: number; dir: Dir }) {
+/** The hand that shows which vehicle to tap: it comes down on the vehicle again and again. It never takes a touch. */
+function GuideHand({ x, y }: { x: number; y: number }) {
   const k = useSharedValue(0);
   useEffect(() => {
-    k.set(withRepeat(withSequence(withTiming(1, { duration: 650, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 250 })), -1));
+    k.set(withRepeat(withSequence(withTiming(1, { duration: 450, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 450, easing: Easing.inOut(Easing.quad) })), -1));
     return () => cancelAnimation(k);
-  }, [k, x, y, dir]);
-  const dx = dir === 'R' ? 1 : dir === 'L' ? -1 : 0;
-  const dy = dir === 'D' ? 1 : dir === 'U' ? -1 : 0;
-  const style = useAnimatedStyle(() => ({ transform: [{ translateX: dx * 46 * k.get() }, { translateY: dy * 46 * k.get() }, { scale: 1 - 0.12 * k.get() }] }));
+  }, [k, x, y]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: 14 * k.get() }, { scale: 1 - 0.14 * k.get() }] }));
   return (
-    <Animated.View pointerEvents="none" style={[styles.hand, { left: x - 22, top: y - 6 }, style]}>
+    <Animated.View pointerEvents="none" style={[styles.hand, { left: x - 22, top: y - 4 }, style]}>
       <Text style={styles.handText}>👆</Text>
     </Animated.View>
   );
@@ -227,7 +225,7 @@ export default function GameScreen() {
 
   const levelRef = useRef<Level | null>(null);
   levelRef.current = level;
-  const bridge = useMemo(() => createPickBridge(() => levelRef.current as Level), []);
+  const bridge = useMemo(() => createPickBridge(), []);
   const margins = useMemo(() => ({ top: insets.top + HEADER_H + STARS_H, bottom: insets.bottom + BUTTONS_H }), [insets.top, insets.bottom]);
 
   const chrono = useRef(new Chrono());
@@ -244,8 +242,8 @@ export default function GameScreen() {
   const trialEnded = useRef<string | null>(null);
   const [trialEndId, setTrialEndId] = useState<string | null>(null);
   const tourRunning = useTourRunning();
-  const touched = useRef(-1);
-  const swiped = useRef(false);
+  // Developers only: where the last touch landed and what was found there (a dot and a line of text over the scene).
+  const [touchDebug, setTouchDebug] = useState<{ x: number; y: number; text: string } | null>(null);
 
   const later = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(fn, ms);
@@ -325,7 +323,6 @@ export default function GameScreen() {
         playSfx('horn');
         setTimeout(() => playSfx('pouet', 0.8), 240);
       },
-      shake: () => playSfx('tok', 0.6),
       gateOpen: () => {
         playSfx('barrier');
         notify(Haptics.NotificationFeedbackType.Success);
@@ -564,14 +561,12 @@ export default function GameScreen() {
   /* --------------------------------------------------------------------------- a gesture */
 
   const act = useCallback(
-    (vehicle: number, dir: Dir | null) => {
+    (vehicle: number) => {
       if (!run || finished.current || end || popup || menuOpen || tourRunning || moving) return;
       const { scene, board, state } = run;
-      scene.lastTouched = vehicle;
-      // A vehicle that is still moving ignores gestures; the others stay playable.
+      // A vehicle that is still moving ignores a tap; the others stay playable (taps can follow each other very fast).
       if (scene.isBusy(vehicle)) return;
-      const way = dir ?? board.level.vehicles[vehicle].dir;
-      const result = applyGesture(board, state, vehicle, way);
+      const result = applyTap(board, state, vehicle);
       scene.play(result);
       if (result.kind === 'ignored') return;
       chrono.current.start(Date.now());
@@ -597,44 +592,35 @@ export default function GameScreen() {
   const runRef = useRef(run);
   runRef.current = run;
 
+  /** The vehicle under a touch: the position comes from the gesture handler, goes through the camera onto the ground, then to a vehicle. */
   const vehicleAt = useCallback(
     (x: number, y: number): number => {
       const r = runRef.current;
-      if (!r) return -1;
-      const cell = bridge.pick(x, y);
-      if (!cell) return -1;
-      return r.state.occ[cell[0] * r.level.cols + cell[1]];
+      const ground = r ? bridge.ground(x, y) : null;
+      const found = r && ground ? pickVehicle(r.level, r.state, ground.x, ground.z) : -1;
+      if (testerTools()) {
+        const cell = r && ground ? `${Math.floor(ground.z + r.level.rows / 2)},${Math.floor(ground.x + r.level.cols / 2)}` : '-';
+        setTouchDebug({ x, y, text: `touch ${Math.round(x)},${Math.round(y)} → place ${cell} → ${found >= 0 ? `vehicle ${found}` : 'none'}` });
+      }
+      return found;
     },
     [bridge],
   );
 
-  const gesture = useMemo(() => {
-    const pan = Gesture.Pan()
-      .runOnJS(true)
-      .minDistance(8)
-      .maxPointers(1)
-      .onBegin((e) => {
-        touched.current = vehicleAt(e.x, e.y);
-        swiped.current = false;
-      })
-      .onUpdate((e) => {
-        if (swiped.current || touched.current < 0) return;
-        const adx = Math.abs(e.translationX);
-        const ady = Math.abs(e.translationY);
-        if (Math.max(adx, ady) < SWIPE_THRESHOLD) return;
-        swiped.current = true;
-        actRef.current(touched.current, adx > ady ? (e.translationX > 0 ? 'R' : 'L') : e.translationY > 0 ? 'D' : 'U');
-      });
-    const tap = Gesture.Tap()
-      .runOnJS(true)
-      .maxDistance(12)
-      .onEnd((e) => {
-        const v = vehicleAt(e.x, e.y);
-        if (v >= 0) actRef.current(v, null);
-      });
-    return Gesture.Exclusive(pan, tap);
-  }, [vehicleAt]);
-
+  // Taps only: no swipe. A tap on a vehicle sends it the one way its arrow shows.
+  const gesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .runOnJS(true)
+        .maxDistance(30)
+        .maxDuration(700)
+        .onEnd((e, success) => {
+          if (!success) return;
+          const v = vehicleAt(e.x, e.y);
+          if (v >= 0) actRef.current(v);
+        }),
+    [vehicleAt],
+  );
   /* --------------------------------------------------------------------------- restart, hint, lives */
 
   const settleLoss = useCallback((keepStreak: boolean) => {
@@ -778,7 +764,7 @@ export default function GameScreen() {
         { key: 'tour', label: t('dev.replayTour'), icon: 'help-circle-outline', onPress: () => { setMenuOpen(false); setTimeout(startTour, 350); } },
         { key: 'next', label: 'Niveau +1', icon: 'skip-next', onPress: () => { setMenuOpen(false); setLevelId((id) => (id ?? 1) + 1); setRunKey((k) => k + 1); } },
         { key: 'prev', label: 'Niveau −1', icon: 'skip-previous', onPress: () => { setMenuOpen(false); setLevelId((id) => Math.max(1, (id ?? 2) - 1)); setRunKey((k) => k + 1); } },
-        { key: 'win', label: 'Gagner le niveau', icon: 'trophy', onPress: () => { setMenuOpen(false); const r = runRef.current; if (r) r.level.solution.forEach((id, i) => setTimeout(() => actRef.current(id, null), 350 * i)); } },
+        { key: 'win', label: 'Gagner le niveau', icon: 'trophy', onPress: () => { setMenuOpen(false); const r = runRef.current; if (r) r.level.solution.forEach((id, i) => setTimeout(() => actRef.current(id), 350 * i)); } },
       ]
     : [];
   const pauseToggles: PauseToggle[] = settings
@@ -814,7 +800,7 @@ export default function GameScreen() {
             <ParkingCanvas
               level={level}
               scene={run.scene}
-              next={nextRun && !daily ? { level: nextRun.level, scene: nextRun.scene } : null}
+              next={nextStage(run, nextRun, daily)}
               transition={transition}
               onTransitionDone={transitionDone}
               bridge={bridge}
@@ -828,6 +814,14 @@ export default function GameScreen() {
         </View>
       </GestureDetector>
 
+      {testerTools() && touchDebug && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <View pointerEvents="none" style={[styles.touchDot, { left: touchDebug.x - 7, top: touchDebug.y - 7 }]} />
+          <Text pointerEvents="none" style={[styles.touchText, { top: insets.top + 8 + 45 + 6 + 46 }]}>
+            {touchDebug.text}
+          </Text>
+        </View>
+      )}
       {testerTools() && settings?.showPerf && <FpsCounter top={insets.top + 8 + 45 + 6} />}
 
       {confetti > 0 && <Confetti key={confetti} width={width} height={height} count={44} />}
@@ -854,7 +848,7 @@ export default function GameScreen() {
             </View>
           )}
 
-          {guide && guideAt && !end && !tourRunning && <GuideHand x={guideAt.x} y={guideAt.y} dir={guide.dir} />}
+          {guide && guideAt && !end && !tourRunning && <GuideHand x={guideAt.x} y={guideAt.y} />}
 
           {!end && <AdBanner bottom={insets.bottom} levelId={level.id} />}
 
@@ -1023,6 +1017,8 @@ const styles = StyleSheet.create({
   hintCostText: { color: colors.text, fontSize: fontSizes.sm, fontWeight: '800' },
   hand: { position: 'absolute', width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   handText: { fontSize: 38 },
+  touchDot: { position: 'absolute', width: 14, height: 14, borderRadius: 7, backgroundColor: 'rgba(255, 60, 120, 0.85)', borderWidth: 2, borderColor: '#fff' },
+  touchText: { position: 'absolute', left: 12, right: 12, color: '#fff', fontSize: 11, fontWeight: '800', backgroundColor: 'rgba(0, 0, 0, 0.65)', padding: 4, borderRadius: 6, overflow: 'hidden' },
   fps: { position: 'absolute', left: 12, right: 12, padding: 6, borderRadius: 8, backgroundColor: 'rgba(0, 0, 0, 0.6)' },
   fpsText: { color: '#9dffb0', fontSize: 11, fontWeight: '700' },
   laterHit: { paddingVertical: 10, paddingHorizontal: 24 },

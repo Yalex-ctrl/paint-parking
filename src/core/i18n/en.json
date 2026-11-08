@@ -168,7 +168,7 @@
     "gift": "Here are {{count}} coins to get you started.",
     "steps": {
       "steps": "Every level you clear ticks a box. After 5: a chest full of coins!",
-      "moves": "Each vehicle leaves in one move: no collision earns 3 ★.",
+      "moves": "Each car leaves in one tap: no collision earns 3 ★.",
       "movesLimited": "Careful, the number of moves is limited!",
       "lives": "You have 5 lives. You lose one when you fail. They come back on their own, one every 30 minutes.",
       "streak": "Chain your wins: your coins are multiplied up to ×2!",
@@ -186,7 +186,7 @@
       "gallery": "Your wins reveal pictures to collect.",
       "gifts": "Your gifts: come back often, there’s always something to grab!",
       "piggy": "Part of your earnings drops into the piggy bank. Break it when it’s nice and full!",
-      "hint": "Stuck? The hint shows which vehicle to send out."
+      "hint": "Stuck? The hint circles a car that can leave."
     }
   },
   "hud": {
@@ -417,7 +417,7 @@
     "tipLabel": "TIP",
     "tips": {
       "minimum": "Tip: no collision earns 3 ★.",
-      "bends": "A vehicle can leave by its front or by its back.",
+      "bends": "Each car has its arrow: it only goes that way.",
       "streak": "A win streak multiplies your coins.",
       "piggy": "Your piggy bank fills up on its own when you win.",
       "stop": "Obstacles never move: drive around them.",
@@ -671,7 +671,7 @@
     "obstacle": "Obstacles never move: drive around them!",
     "truck": "Trucks are longer: make room for them.",
     "gate": "The barrier opens once enough cars have left.",
-    "oneWay": "Follow the direction of the arrow!"
+    "oneWay": "Follow the arrow painted on the ground!"
   },
   "app": {
     "name": "Paint Parking"
@@ -723,7 +723,7 @@
     "impossible": "Can’t finish within {{count}} moves, restart",
     "noHint": "No hint: restart the level",
     "allPainted": "Everything is painted: head for the exit!",
-    "swipeToMove": "Swipe a vehicle to drive it out",
+    "swipeToMove": "Tap a free car to send it out",
     "tryAgain": "Restart, you’ll get it!",
     "hint": "Hint",
     "alreadyDone": "Already cleared today",

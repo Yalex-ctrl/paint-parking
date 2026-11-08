@@ -1,6 +1,6 @@
 # Paint Parking
 
-Puzzle game: a jammed parking lot. Swipe a vehicle along its axis (or tap it to send it forward) and it drives out, round the lot by the road, leaving a trail of paint. If something is in the way it honks, bumps and comes back (one move, one collision). Empty the lot with no collision for 3 stars.
+Puzzle game: a jammed parking lot. Every vehicle has ONE way to go, shown by a big arrow painted on its roof (sometimes toward its rear: it reverses out). Tap a vehicle and it drives that way: out of the lot, round it by the road, leaving a trail of paint, if the way is clear; otherwise it goes up to what is in the way, honks, bumps and comes back (one tap = one move, a bump = one collision). Empty the lot with no collision for 3 stars.
 
 Built on the same base as Paint Maze (Expo SDK 58, React Three Fiber on expo-gl, runs in Expo Go and in EAS builds). The project is a copy: **Paint Maze itself is never touched**, the two games share no data on a phone (storage keys `paint-parking/…`, product ids `paintparking_…`).
 
@@ -29,10 +29,11 @@ node scripts/audit-frame-allocations.js     # nothing may be allocated in a useF
 
 ## Rules
 
-- A vehicle covers 2 cells (car) or 3 (truck), has a front, and can leave by either end of its axis. A gesture along the other axis shakes it and counts nothing.
-- It leaves if every cell between it and the edge is free (no vehicle, no obstacle), the barrier on that part of the edge is open and the one-way arrow of its lane allows that way. Otherwise it drives up to the obstacle, bumps and comes back.
+- A vehicle covers 1 x 2 places (car) or 1 x 3 (truck); its body is 78 % of a place wide and 90 % of its length long, so the asphalt and the lines show round it. Its arrow shows its one way (front or rear).
+- A tap sends it that way. It leaves if every place between it and the edge is free (no vehicle, no obstacle, no void of the lot shape), the barrier on that part of the edge is open and no one-way arrow on the way points another direction. Otherwise it bumps and comes back. A tap on a vehicle that is still moving, or has left, is ignored; taps on different vehicles can follow each other as fast as one likes.
 - Optimum = number of vehicles. 3 stars: no collision; 2: one or two; 1: more. Move limit (levels 6+): optimum + 3 up to level 20, + 2 after.
-- Because vehicles only ever leave, a lot can be emptied if and only if one can keep removing a free vehicle: the solver has no search (`game/solver.ts`), and the generator builds a lot backwards so it is solvable by construction (`game/generator.ts`), then moves vehicles to reach the difficulty of the curve.
+- A vehicle is free when the places in front of it, up to the edge, are empty. Because vehicles only ever leave, a lot can be emptied if and only if one can keep removing a free vehicle: the solver has no search (`game/solver.ts`). The generator builds a lot backwards (each new vehicle gets the way and the arrow that are clear given the vehicles already there, and prefers to stand in the way of those that could leave), then moves vehicles around to reach the difficulty of the curve with only 15-30 % of the vehicles free at the start (`game/generator.ts`).
+- Touches: `react-native-gesture-handler` gives the pixel, `render/pick.ts` casts it through the camera onto the ground and finds the vehicle (with a 0.3 place tolerance). The canvas itself never takes a touch (`pointerEvents="none"`), and neither do the help, the halo or any decoration over the lot. In the tester mode a dot and a line of text show where the last touch landed and what was found.
 
 ## Mechanics (each introduced by a tutorial level where it is alone and necessary)
 
@@ -41,7 +42,7 @@ node scripts/audit-frame-allocations.js     # nothing may be allocated in a useF
 | 8 | fixed obstacles (posts, potted trees, bollards) |
 | 15 | trucks (3 cells) |
 | 25 | barrier: part of the edge is shut until enough vehicles have left (counter on the barrier) |
-| 35 | one-way: an arrow painted on an edge cell, vehicles of that lane may only leave that way |
+| 35 | one-way arrows painted on places: a vehicle may only drive over such a place the way the arrow shows (any other way is a wall). With one fixed way per vehicle, an arrow can only ever be on the way of vehicles that go its way: it is a rule to respect, not a puzzle on its own |
 
 ## State
 

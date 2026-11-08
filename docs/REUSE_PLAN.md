@@ -68,7 +68,7 @@ Vérifié automatiquement : typecheck, lint, 550 tests, export Android (bundle H
 | Copie, renommage, isolation des données, identifiants de production retirés | fait |
 | Regroupement du code commun dans `src/core/` | fait |
 | Retrait du labyrinthe | fait (`legacy-maze/`, hors build, à supprimer) |
-| Règles, solveur, générateur, 50 niveaux, 30 défis, étoiles, points, aide, mécaniques | fait, testés |
+| Règles (une flèche = un sens par voiture, un tap = un coup), solveur, générateur, 50 niveaux, 30 défis, étoiles, points, aide, mécaniques | refondus et testés (voir `LEVEL_TABLE.md`) |
 | Rendu 3D : plateau, trottoir, route, places, obstacles, barrières, flèches, décors Kenney | fait |
 | Véhicules | procéduraux (le Kenney Car Kit refuse le téléchargement automatique) ; **à remplacer par les vrais modèles si vous les téléchargez** |
 | Animations : sortie par la route, collision, secousse, fumée, émoji fâché, traînée, vague de brillance | fait |

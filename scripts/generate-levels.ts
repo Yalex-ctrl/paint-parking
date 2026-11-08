@@ -39,7 +39,7 @@ export function problems(level: Level): string | null {
 }
 
 export const tableRow = (l: Level) =>
-  `| ${l.id} | ${l.cols}x${l.rows} | ${l.vehicles.length} | ${l.vehicles.filter((v) => v.len === 3).length} | ${l.layers} | ${l.avgFree.toFixed(1)} | ${l.avgChain.toFixed(1)} | ${l.traps} | ${Math.round(l.fill * 100)}% | ${l.difficulty.toFixed(1)} | ${l.mechanics.join(', ') || '-'}${l.tutorial ? ' (tuto)' : ''} |`;
+  `| ${l.id} | ${l.cols}x${l.rows} | ${l.vehicles.length} | ${l.vehicles.filter((v) => v.len === 3).length} | ${Math.round(l.freeStart * 100)}% | ${l.layers} | ${l.avgFree.toFixed(1)} | ${l.avgChain.toFixed(1)} | ${l.traps} | ${Math.round(l.fill * 100)}% | ${l.difficulty.toFixed(1)} | ${l.mechanics.join(', ') || '-'}${l.tutorial ? ' (tuto)' : ''} |`;
 
 if (require.main === module) {
   const levels: Level[] = [];
@@ -55,7 +55,7 @@ if (require.main === module) {
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(levels.map(encodeLevel)));
   console.log(`Wrote ${levels.length} levels to ${OUT}`);
-  const header = '| # | Taille (colxlig) | Véhicules | Camions | Couches | Libres moy. | Chaîne moy. | Pièges | Remplissage | Difficulté | Mécaniques |\n|---|---|---|---|---|---|---|---|---|---|---|';
+  const header = '| # | Taille (colxlig) | Véhicules | Camions | Libres au départ | Couches | Libres moy. | Chaîne moy. | Pièges | Remplissage | Difficulté | Mécaniques |\n|---|---|---|---|---|---|---|---|---|---|---|---|';
   const table = `${header}\n${levels.map(tableRow).join('\n')}\n`;
   console.log(table);
   if (TABLE) writeFileSync(resolve(TABLE), table);

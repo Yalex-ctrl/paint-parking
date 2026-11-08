@@ -4,7 +4,7 @@ import { SIDEWALK } from './coords';
 import type { Level } from '../game/types';
 
 /** Angle between the view direction and the ground (90 would be straight down). */
-export const CAMERA_TILT_DEG = 65;
+export const CAMERA_TILT_DEG = 55;
 /** Share of the screen width the lot (with its sidewalk) should fill. */
 const TARGET_WIDTH = 0.9;
 /** How high the things worth framing go above the ground. */
