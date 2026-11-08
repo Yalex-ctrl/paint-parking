@@ -327,7 +327,7 @@
     "keepPlaying": "Continuer à jouer",
     "noMoves": {
       "title": "Plus de coups !",
-      "body": "Tu as utilisé les {{count}} coups du niveau sans tout peindre.",
+      "body": "Tu as utilisé les {{count}} coups du niveau sans vider le parking.",
       "ad": "+{{count}} coups (pub)",
       "coins": "+{{count}} coups"
     },
@@ -730,7 +730,7 @@
     "impossible": "Impossible de finir en {{count}} coups, recommence",
     "noHint": "Pas d’indice : recommence le niveau",
     "allPainted": "Tout est peint : rejoins la sortie !",
-    "swipeToMove": "Glisse pour déplacer la balle",
+    "swipeToMove": "Glisse un véhicule pour le faire sortir",
     "tryAgain": "Recommence, tu vas y arriver !",
     "hint": "Indice",
     "alreadyDone": "Déjà réussi aujourd’hui",
@@ -738,14 +738,15 @@
     "scoreLine": "Score : {{score}} pts",
     "preparing": "Préparation du niveau {{id}}…",
     "worldReward": "RÉCOMPENSE DE FIN DE MONDE",
-    "newBallInShop": "Une nouvelle balle, à retrouver dans la boutique.",
+    "newBallInShop": "Un nouveau véhicule, à retrouver dans la boutique.",
     "newPaintInShop": "Une nouvelle peinture, à retrouver dans la boutique.",
     "restartQuestion": "Recommencer ?",
     "restartCosts": "Recommencer coûte 1 vie.",
     "restartConfirm": "Recommencer (−1 vie)",
     "basicsDone": "Bravo, tu maîtrises les bases ! 🎉",
     "tourQuestion": "Je te fais faire le tour ?",
-    "letsGo": "C’est parti"
+    "letsGo": "C’est parti",
+    "tapToMove": "Touche un véhicule pour le faire avancer"
   },
   "offers": {
     "free": "Gratuit",

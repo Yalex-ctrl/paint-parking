@@ -67,8 +67,11 @@ Règle : `src/core` n'importe jamais `src/game`. (Quelques fichiers de `core` on
 | Regroupement du code commun dans `src/core/` | fait (imports réécrits, typecheck et lint propres) |
 | Retrait du code propre au labyrinthe | fait (déplacé dans `legacy-maze/`, hors build) |
 | Règles, solveur, générateur, niveaux, défis, étoiles, points, aide, mécaniques + tests | fait |
-| Rendu 3D du parking, véhicules, animations, transition par la route | à faire |
-| HUD et écran de jeu, aide en jeu, visite guidée | à faire |
+| Rendu 3D du parking (plateau, trottoir, route, places, lignes, obstacles, barrières, flèches, décors Kenney), véhicules procéduraux, sorties, collisions, traînées, vague de brillance, fumée, émoji | fait, **jamais lancé sur un téléphone** (build Android exporté sans erreur, tests de la logique et de la géométrie) |
+| Transition entre niveaux par la route (la caméra suit la route jusqu'au parking suivant) | à faire (pour l'instant le niveau suivant remplace l'actuel) |
+| Vrais modèles Kenney Car Kit | à faire à la main : le site renvoie 403 aux téléchargements automatiques |
+| HUD et écran de jeu, gestes, indice, aide niveaux 1-5, vies, série, résultat, défi du jour | fait (`src/screens/GameScreen.tsx`), jamais lancé sur un téléphone |
+| Visite guidée adaptée au parking, coffre de fin d'étape, galerie à l'écran de résultat | à faire |
 | Boutique « Véhicules » (~40 skins), peintures sur la traînée | à faire |
 | Sons du parking | à faire |
 | Mesures de performance en build optimisé | à faire (rien à mesurer avant le rendu) |

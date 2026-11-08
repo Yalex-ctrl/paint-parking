@@ -17,7 +17,7 @@ module.exports = defineConfig([
     // and paint tiles are mutated from useFrame / a SceneBus instead of React state,
     // which is what the React Compiler lint rules below forbid. react-three-fiber's JSX
     // also uses Three.js props (args, castShadow, ...) unknown to the DOM-oriented rule.
-    files: ['src/render/**/*.{ts,tsx}', 'src/core/render/**/*.{ts,tsx}', 'src/app/game.tsx'],
+    files: ['src/render/**/*.{ts,tsx}', 'src/core/render/**/*.{ts,tsx}', 'src/screens/GameScreen.tsx'],
     rules: {
       'react-hooks/immutability': 'off',
       'react-hooks/refs': 'off',

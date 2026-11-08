@@ -327,7 +327,7 @@
     "keepPlaying": "Keep playing",
     "noMoves": {
       "title": "Out of moves!",
-      "body": "You used all {{count}} moves of the level without painting everything.",
+      "body": "You used the {{count}} moves of the level without emptying the lot.",
       "ad": "+{{count}} moves (ad)",
       "coins": "+{{count}} moves"
     },
@@ -730,7 +730,7 @@
     "impossible": "Can’t finish within {{count}} moves, restart",
     "noHint": "No hint: restart the level",
     "allPainted": "Everything is painted: head for the exit!",
-    "swipeToMove": "Swipe to move the ball",
+    "swipeToMove": "Swipe a vehicle to drive it out",
     "tryAgain": "Restart, you’ll get it!",
     "hint": "Hint",
     "alreadyDone": "Already cleared today",
@@ -738,14 +738,15 @@
     "scoreLine": "Score: {{score}} pts",
     "preparing": "Preparing level {{id}}…",
     "worldReward": "END-OF-WORLD REWARD",
-    "newBallInShop": "A new ball, waiting for you in the shop.",
+    "newBallInShop": "A new vehicle, waiting in the shop.",
     "newPaintInShop": "A new paint, waiting for you in the shop.",
     "restartQuestion": "Restart?",
     "restartCosts": "Restarting costs 1 life.",
     "restartConfirm": "Restart (−1 life)",
     "basicsDone": "Well done, you’ve got the basics! 🎉",
     "tourQuestion": "Shall I show you around?",
-    "letsGo": "Let’s go"
+    "letsGo": "Let’s go",
+    "tapToMove": "Tap a vehicle to make it go forward"
   },
   "offers": {
     "free": "Free",
