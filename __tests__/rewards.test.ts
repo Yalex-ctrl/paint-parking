@@ -1,9 +1,9 @@
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 
-import { MONETIZATION } from '../src/config/monetization';
-import { defaultProfile, owns, type Profile } from '../src/game/economy';
-import { PlayTimer } from '../src/game/playTimer';
-import { createRng } from '../src/game/rng';
+import { MONETIZATION } from '../src/core/config/monetization';
+import { defaultProfile, owns, type Profile } from '../src/core/economy';
+import { PlayTimer } from '../src/core/playTimer';
+import { createRng } from '../src/core/rng';
 import {
   adBonuses,
   applyWheelPrize,
@@ -27,14 +27,14 @@ import {
   unlockStatus,
   wheelSlots,
   wheelStatus,
-} from '../src/game/rewards';
-import { SHOP_ITEMS } from '../src/game/shopItems';
-import { ads, setAdsImplementation, type AdsService } from '../src/services/ads';
-import { _setPlayClockForTests, playContext, resetPlayClockForTests } from '../src/services/playClock';
-import { setAnalyticsImplementation } from '../src/services/analytics';
-import { clearToastForTests, currentToast } from '../src/services/toast';
-import { getProfile, resetProfileForTests, updateProfile } from '../src/storage/profile';
-import { dayKeyOf } from '../src/game/dates';
+} from '../src/core/rewards';
+import { SHOP_ITEMS } from '../src/core/shopItems';
+import { ads, setAdsImplementation, type AdsService } from '../src/core/services/ads';
+import { _setPlayClockForTests, playContext, resetPlayClockForTests } from '../src/core/services/playClock';
+import { setAnalyticsImplementation } from '../src/core/services/analytics';
+import { clearToastForTests, currentToast } from '../src/core/services/toast';
+import { getProfile, resetProfileForTests, updateProfile } from '../src/core/storage/profile';
+import { dayKeyOf } from '../src/core/dates';
 
 const R = MONETIZATION.rewards;
 const MIN = 60_000;
@@ -270,7 +270,7 @@ describe('the wheel of fortune', () => {
     const read = (f: string) => fs.readFileSync(path.join(__dirname, '../src', f), 'utf8');
     const panel = read('app/gifts.tsx');
     expect(panel).toMatch(/const slot = drawWheel\([\s\S]*wheel\.current\?\.spin\(slot,/);
-    const wheel = read('components/Wheel.tsx');
+    const wheel = read('core/components/Wheel.tsx');
     expect(wheel).toContain('runOnJS(tick)()'); // a click and a vibration at every slice
     expect(wheel).toMatch(/Easing\.out\(Easing\.cubic\)/); // fast, then slower and slower
   });

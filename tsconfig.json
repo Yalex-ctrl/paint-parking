@@ -19,5 +19,10 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "legacy-maze",
+    "dist"
   ]
 }

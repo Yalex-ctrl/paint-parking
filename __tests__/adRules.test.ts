@@ -1,11 +1,11 @@
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 
-import { MONETIZATION } from '../src/config/monetization';
-import { registerInterstitial, shouldShowInterstitial, type InterstitialContext } from '../src/game/adRules';
-import { applyRemoveAds, defaultProfile } from '../src/game/economy';
-import { ads, setAdsImplementation, type AdsService } from '../src/services/ads';
-import { _setPlayClockForTests, noteAdEnded, noteEvent, playContext, resetPlayClockForTests } from '../src/services/playClock';
-import { setAnalyticsImplementation } from '../src/services/analytics';
+import { MONETIZATION } from '../src/core/config/monetization';
+import { registerInterstitial, shouldShowInterstitial, type InterstitialContext } from '../src/core/adRules';
+import { applyRemoveAds, defaultProfile } from '../src/core/economy';
+import { ads, setAdsImplementation, type AdsService } from '../src/core/services/ads';
+import { _setPlayClockForTests, noteAdEnded, noteEvent, playContext, resetPlayClockForTests } from '../src/core/services/playClock';
+import { setAnalyticsImplementation } from '../src/core/services/analytics';
 
 /** A moment of play that satisfies every rule; each test breaks one. */
 const ok = (over: Partial<InterstitialContext> = {}): InterstitialContext => ({

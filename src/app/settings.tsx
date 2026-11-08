@@ -1,36 +1,36 @@
-import { useIsVip } from '@/storage/useVip';
-import { restoreSubscription } from '@/services/subscription';
-import { ResetFlow } from '@/components/ResetFlow';
-import { LANGUAGES, formatNumber, setLanguage, t, useLanguage } from '@/i18n';
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useIsVip } from '@/core/storage/useVip';
+import { restoreSubscription } from '@/core/services/subscription';
+import { ResetFlow } from '@/core/components/ResetFlow';
+import { LANGUAGES, formatNumber, setLanguage, t, useLanguage } from '@/core/i18n';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { MONETIZATION } from '@/config/monetization';
+import { MONETIZATION } from '@/core/config/monetization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { testerTools } from '@/config/tester';
-import { useFeatures } from '@/config/features';
-import { setAudioSettings } from '@/services/audio';
-import { totalScore } from '@/game/points';
-import { preloadDecor } from '@/render/decor/models';
-import { setHapticsEnabled } from '@/services/haptics';
-import { requestNotificationPermission, syncNotifications } from '@/services/notifications';
-import { restorePurchases } from '@/services/purchases';
-import { getProfile, updateProfile, useProfile } from '@/storage/profile';
-import { replayTutorial, resetProgress } from '@/storage/reset';
-import { resetHud } from '@/tour/hudStore';
-import { DEFAULT_SETTINGS, loadSettings, saveSettings, type Settings } from '@/storage/settings';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { Slider } from '@/ui/Slider';
-import { Icon, type IconName } from '@/ui/Icon';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
-import { adsStarted, showPrivacyOptions } from '@/services/admob';
-import { showToast } from '@/services/toast';
+import { testerTools } from '@/core/config/tester';
+import { useFeatures } from '@/core/config/features';
+import { setAudioSettings } from '@/core/services/audio';
+import { totalScore } from '@/core/points';
+import { preloadDecor } from '@/core/render/decor/models';
+import { setHapticsEnabled } from '@/core/services/haptics';
+import { requestNotificationPermission, syncNotifications } from '@/core/services/notifications';
+import { restorePurchases } from '@/core/services/purchases';
+import { getProfile, updateProfile, useProfile } from '@/core/storage/profile';
+import { replayTutorial, resetProgress } from '@/core/storage/reset';
+import { resetHud } from '@/core/tour/hudStore';
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, type Settings } from '@/core/storage/settings';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { Slider } from '@/core/ui/Slider';
+import { Icon, type IconName } from '@/core/ui/Icon';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
+import { adsStarted, showPrivacyOptions } from '@/core/services/admob';
+import { showToast } from '@/core/services/toast';
 
 function Row({ icon, label, hint, value, onChange, slider }: { icon: IconName; label: string; hint: string; value: boolean; onChange: (v: boolean) => void; slider?: { value: number; onChange: (v: number) => void } }) {
   return (

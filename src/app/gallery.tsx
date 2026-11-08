@@ -1,21 +1,21 @@
-import { pictureName } from '@/i18n/names';
-import { t, useLanguage } from '@/i18n';
-import { useScreenReady } from '@/ui/useScreenReady';
+import { pictureName } from '@/core/i18n/names';
+import { t, useLanguage } from '@/core/i18n';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Confetti } from '@/components/Confetti';
-import { PIECES, gallery, pictureForLevel, pictureUri } from '@/game/gallery';
-import { loadProgress, type Progress } from '@/storage/progress';
-import { Icon } from '@/ui/Icon';
-import { Card3D } from '@/ui/Card3D';
-import { Target } from '@/tour/targets';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, radius, fontSizes } from '@/ui/theme';
+import { Confetti } from '@/core/components/Confetti';
+import { PIECES, gallery, pictureForLevel, pictureUri } from '@/core/gallery';
+import { loadProgress, type Progress } from '@/core/storage/progress';
+import { Icon } from '@/core/ui/Icon';
+import { Card3D } from '@/core/ui/Card3D';
+import { Target } from '@/core/tour/targets';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, radius, fontSizes } from '@/core/ui/theme';
 
 type Open = { index: number; pieces: number; name: string; complete: boolean };
 

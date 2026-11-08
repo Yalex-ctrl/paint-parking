@@ -1,27 +1,27 @@
-import { useIsVip } from '@/storage/useVip';
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useIsVip } from '@/core/storage/useVip';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MONETIZATION } from '@/config/monetization';
-import { nextVipBall, noteRefusal, yearlySaving, type PaywallSource, type VipPlan } from '@/game/vip';
-import { formatPercent, priceText, realYearlySaving, t, useLanguage, yearlyMonthlyText } from '@/i18n';
-import { itemName } from '@/i18n/names';
+import { MONETIZATION } from '@/core/config/monetization';
+import { nextVipBall, noteRefusal, yearlySaving, type PaywallSource, type VipPlan } from '@/core/vip';
+import { formatPercent, priceText, realYearlySaving, t, useLanguage, yearlyMonthlyText } from '@/core/i18n';
+import { itemName } from '@/core/i18n/names';
 import { ShopPreview } from '@/render/ShopPreview';
-import { track } from '@/services/analytics';
-import { playSfx } from '@/services/audio';
-import { restoreSubscription, subscribe } from '@/services/subscription';
-import { showToast } from '@/services/toast';
-import { updateProfile, useProfile } from '@/storage/profile';
-import { BenefitRow, VIP_BENEFITS, planPrice } from '@/components/VipParts';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { Icon } from '@/ui/Icon';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes, radius } from '@/ui/theme';
+import { track } from '@/core/services/analytics';
+import { playSfx } from '@/core/services/audio';
+import { restoreSubscription, subscribe } from '@/core/services/subscription';
+import { showToast } from '@/core/services/toast';
+import { updateProfile, useProfile } from '@/core/storage/profile';
+import { BenefitRow, VIP_BENEFITS, planPrice } from '@/core/components/VipParts';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { Icon } from '@/core/ui/Icon';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes, radius } from '@/core/ui/theme';
 
 const SOURCES: PaywallSource[] = ['offres', 'cadeaux', 'vies', 'reglages', 'auto_level20', 'auto_weekly'];
 

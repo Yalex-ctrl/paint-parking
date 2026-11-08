@@ -16,10 +16,10 @@ jest.mock('react-native-purchases', () => ({ __esModule: true, default: mockSdk 
 
 const info = (over: Record<string, unknown> = {}) => ({ entitlements: { active: {}, all: {} }, nonSubscriptionTransactions: [], ...over });
 
-let purchases: typeof import('../src/services/purchases');
-let subscription: typeof import('../src/services/subscription');
-let rc: typeof import('../src/services/revenuecat');
-let profile: typeof import('../src/storage/profile');
+let purchases: typeof import('../src/core/services/purchases');
+let subscription: typeof import('../src/core/services/subscription');
+let rc: typeof import('../src/core/services/revenuecat');
+let profile: typeof import('../src/core/storage/profile');
 
 const flush = () => new Promise((r) => setTimeout(r, 20));
 
@@ -28,10 +28,10 @@ beforeEach(async () => {
   Object.values(mockSdk).forEach((m) => m.mockReset());
   mockSdk.getCustomerInfo.mockResolvedValue(info());
   mockSdk.getProducts.mockImplementation(async (ids: string[]) => ids.map((id) => ({ identifier: id })));
-  purchases = require('../src/services/purchases');
-  subscription = require('../src/services/subscription');
-  rc = require('../src/services/revenuecat');
-  profile = require('../src/storage/profile');
+  purchases = require('../src/core/services/purchases');
+  subscription = require('../src/core/services/subscription');
+  rc = require('../src/core/services/revenuecat');
+  profile = require('../src/core/storage/profile');
   await profile.loadProfile?.();
 });
 

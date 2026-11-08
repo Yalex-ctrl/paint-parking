@@ -2,14 +2,14 @@ import { Redirect, useRouter } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { formatDate, t } from '@/i18n';
-import { testerTools } from '@/config/tester';
+import { formatDate, t } from '@/core/i18n';
+import { testerTools } from '@/core/config/tester';
 import { DAILY_LEVELS, dailyIndexForDay } from '@/game/dailyLevels';
-import { addDays, dayKeyOf, parseDay } from '@/game/dates';
-import { Card3D } from '@/ui/Card3D';
-import { ScreenHeader } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
+import { addDays, dayKeyOf, parseDay } from '@/core/dates';
+import { Card3D } from '@/core/ui/Card3D';
+import { ScreenHeader } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
 
 const COLUMNS = 5;
 const GAP = 10;
@@ -52,7 +52,7 @@ export default function DailyPickScreen() {
           <Card3D style={styles.cell} depth={4} face={colors.surface} innerStyle={styles.cellInner} onPress={() => router.dismissTo({ pathname: '/', params: { daily: '1', challenge: String(index + 1) } })}>
             <Text style={styles.num}>{index + 1}</Text>
             <Text style={styles.size}>{DATES.get(index) ?? ''}</Text>
-            <Text style={styles.size}>{item.star ?? ''}</Text>
+            <Text style={styles.size}>{item.shape}</Text>
           </Card3D>
         )}
       />

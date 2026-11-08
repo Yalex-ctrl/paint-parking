@@ -1,5 +1,5 @@
-import { SHOP_ITEMS } from '../src/game/shopItems';
-import { ACTIVE_PLAYER, giftCoins, simulate, TYPICAL_PLAYER, VIP_PLAYER, type SimPlayer } from '../src/game/economySim';
+import { SHOP_ITEMS } from '../src/core/shopItems';
+import { ACTIVE_PLAYER, giftCoins, simulate, TYPICAL_PLAYER, VIP_PLAYER, type SimPlayer } from '../src/core/economySim';
 
 // 30 days of play, and a few more days so the legendary purchase shows up.
 function report(name: string, player: SimPlayer) {

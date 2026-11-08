@@ -1,69 +1,48 @@
 /**
- * Pre-generates the 366 daily challenges: `npm run generate-daily` -> assets/daily.json.
- * Challenge number i is played on weekday i % 7 (Monday = 0) and puts forward the mechanic of that day (dailyMechanics.ts: slides,
- * platforms, the collapsing floor, slides and platforms, bends in a spiral, portals and bombs, a mix), in a corridor in a recognisable
- * shape with many bends (game/funDaily.ts), solvable, as hard as levels 150 to 200 of the campaign by the same difficulty score,
- * with every tile in view, within the performance budget, and no two sharing a shape.
- * It can be run in pieces, one weekday each, for several processes at once:
- *   npx tsx scripts/generate-daily.ts --weekday 2 --out /tmp/daily_2.json
- * and the pieces put together with scripts/merge-daily.ts.
+ * Pre-generates the daily challenges: `npm run generate-daily -- --count 30` -> assets/daily.json (the app handles 366).
+ *
+ * Bigger and more spectacular than the campaign (many trucks, lots in the shape of an L or a cross, islands of obstacles), steered
+ * toward the difficulty of levels 40-50. The paint and the vehicle of the day are drawn from the date alone (core/dailyLoadout.ts).
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import { themeForIndex } from '../src/game/dailyThemes';
-import { buildFunLevel, canonicalShape, overlap } from '../src/game/funDaily';
+import { buildLevel, dailyRecipe, targetDifficulty } from '../src/game/generator';
+import { encodeLevel } from '../src/game/levelSchema';
 import type { Level } from '../src/game/types';
+import { problems, tableRow } from './generate-levels';
 
-const COUNT = 366;
-const MAX_ATTEMPTS = 12000;
-/** Two levels of the same size that share more of their floor than this are the same shape. */
-const SAME_SHAPE = 0.8;
-const arg = (name: string) => {
+const arg = (name: string, fallback: string) => {
   const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
+  return i >= 0 ? process.argv[i + 1] : fallback;
 };
-const weekday = arg('weekday') !== undefined ? Number(arg('weekday')) : null;
-/** Redo one challenge (its number, from 0) so that it differs from every other of an existing file: --only 123 --against assets/daily.json */
-const only = arg('only') !== undefined ? Number(arg('only')) : null;
-const against = arg('against');
-const OUT = resolve(arg('out') ?? resolve(__dirname, '../assets/daily.json'));
+const count = Number(arg('count', '30'));
+const from = Number(arg('from', '1'));
+const to = Number(arg('to', String(count)));
+const OUT = resolve(arg('out', resolve(__dirname, '../assets/daily.json')));
 
 const levels: Level[] = [];
-const seen = new Set<string>();
-const bySize = new Map<string, Level[]>();
 const started = Date.now();
-if (only !== null && against) {
-  const others = (JSON.parse(readFileSync(resolve(against), 'utf8')) as Level[]).filter((_, i) => i !== only);
-  for (const o of others) {
-    seen.add(canonicalShape(o));
-    const key = `${o.rows}x${o.cols}`;
-    bySize.set(key, [...(bySize.get(key) ?? []), o]);
+for (let n = from; n <= to; n++) {
+  const t0 = Date.now();
+  // Challenge n has the id n (the app adds its own offset); its recipe depends on n alone.
+  // Some shapes (a cross, an L) cannot be made as hard as asked: accept a little less, step by step, until it works.
+  const recipe = dailyRecipe(n - 1);
+  let level: Level | null = null;
+  for (let less = 0; less < 6 && !level; less++) {
+    try {
+      level = buildLevel(n, { recipe, target: targetDifficulty(45) + (n % 5) * 1.5, attempts: 300, tolerance: 1.5, minDifficulty: 22 - 2 * less });
+    } catch {
+      // Nothing that hard fits this shape: accept a little less.
+    }
   }
+  if (!level) throw new Error(`No valid challenge for number ${n}`);
+  const wrong = problems(level);
+  if (wrong) throw new Error(`Challenge ${n} is rejected: ${wrong}`);
+  levels.push(level);
+  console.log(`#${n} ${level.shape} ${level.cols}x${level.rows} vehicles=${level.vehicles.length} layers=${level.layers} diff=${level.difficulty} (${((Date.now() - t0) / 1000).toFixed(1)}s, total ${((Date.now() - started) / 1000).toFixed(0)}s)`);
 }
-for (let index = 0; index < COUNT; index++) {
-  if (weekday !== null && index % 7 !== weekday) continue;
-  if (only !== null && index !== only) continue;
-  const theme = themeForIndex(index);
-  let accepted: Level | null = null;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS && !accepted; attempt++) {
-    const level = buildFunLevel({ theme, seed: index * 100_003 + 7777 + (attempt + (only !== null ? 50_000 : 0)) * 31, index });
-    if (!level) continue;
-    const shape = canonicalShape(level);
-    if (seen.has(shape)) continue;
-    const sameSize = bySize.get(`${level.rows}x${level.cols}`) ?? [];
-    if (sameSize.some((o) => overlap(o, level) > SAME_SHAPE)) continue;
-    accepted = level;
-    seen.add(shape);
-    sameSize.push(level);
-    bySize.set(`${level.rows}x${level.cols}`, sameSize);
-  }
-  if (!accepted) throw new Error(`No daily level for day ${index} (${theme})`);
-  accepted.id = 100000 + index + 1;
-  levels.push(accepted);
-  console.log(`${index + 1}/${COUNT} (${((Date.now() - started) / 1000).toFixed(0)}s) ${theme}: ${accepted.solution.length} swipes, difficulty ${accepted.difficulty}, ${accepted.mechanics.join('+')}`);
-}
-
 mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, JSON.stringify(levels));
-console.log(`Wrote ${levels.length} daily levels to ${OUT}`);
+writeFileSync(OUT, JSON.stringify(levels.map(encodeLevel)));
+console.log(`Wrote ${levels.length} challenges to ${OUT}`);
+console.log(levels.map(tableRow).join('\n'));

@@ -16,8 +16,8 @@ describe('first launch', () => {
     await storage.clear();
 
     // 1st launch of the app ever.
-    let launch = require('../src/storage/launch') as typeof import('../src/storage/launch');
-    let profile = require('../src/storage/profile') as typeof import('../src/storage/profile');
+    let launch = require('../src/core/storage/launch') as typeof import('../src/core/storage/launch');
+    let profile = require('../src/core/storage/profile') as typeof import('../src/core/storage/profile');
     expect(await launch.takeFirstLaunch()).toBe(true);
     expect(await launch.takeFirstLaunch()).toBe(false); // coming back to the home in the same session
     expect(profile.getProfile().launches).toBe(1);
@@ -28,8 +28,8 @@ describe('first launch', () => {
     jest.resetModules();
     const mod2 = require('@react-native-async-storage/async-storage');
     await (mod2.default ?? mod2).setItem('paint-parking/profile/v1', saved);
-    launch = require('../src/storage/launch');
-    profile = require('../src/storage/profile');
+    launch = require('../src/core/storage/launch');
+    profile = require('../src/core/storage/profile');
     expect(await launch.takeFirstLaunch()).toBe(false);
     expect(profile.getProfile().launches).toBe(2);
   });

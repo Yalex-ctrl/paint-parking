@@ -2,9 +2,9 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as THREE from 'three';
 
-import { DECOR_MODELS } from '../src/render/decor/catalog';
-import { NATURAL_COLORS } from '../src/render/decor/palette';
-import { FLOWER_HEADS, proceduralParts } from '../src/render/decor/procedural';
+import { DECOR_MODELS } from '../src/core/render/decor/catalog';
+import { NATURAL_COLORS } from '../src/core/render/decor/palette';
+import { FLOWER_HEADS, proceduralParts } from '../src/core/render/decor/procedural';
 
 /** Material names of a .glb, read straight from its JSON chunk. */
 function materialNames(name: string): string[] {

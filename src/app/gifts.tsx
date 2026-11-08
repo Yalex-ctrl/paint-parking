@@ -1,23 +1,23 @@
 /* eslint-disable react-hooks/purity -- the handlers read the clock when they are called, not while the screen renders (the React Compiler is not enabled). */
-import { itemLabel, itemName } from '@/i18n/names';
-import { useScreenReady } from '@/ui/useScreenReady';
+import { itemLabel, itemName } from '@/core/i18n/names';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ChestOpening } from '@/components/LevelResult';
-import { FreeCoinsButton } from '@/components/FreeCoins';
-import { RewardBurst } from '@/components/RewardBurst';
-import { VipExpiredCard, useOpenVip } from '@/components/VipCards';
-import { Wheel, type WheelFace, type WheelHandle } from '@/components/Wheel';
-import { livesOn } from '@/config/features';
-import { MONETIZATION } from '@/config/monetization';
-import { claimDailyReward, dailyRewardStatus, rewardForDay } from '@/game/daily';
-import { dayKeyOf } from '@/game/dates';
-import { equipItem, owns } from '@/game/economy';
-import { formatDuration, msUntilMidnight } from '@/game/duration';
-import { createRng } from '@/game/rng';
+import { ChestOpening } from '@/core/components/LevelResult';
+import { FreeCoinsButton } from '@/core/components/FreeCoins';
+import { RewardBurst } from '@/core/components/RewardBurst';
+import { VipExpiredCard, useOpenVip } from '@/core/components/VipCards';
+import { Wheel, type WheelFace, type WheelHandle } from '@/core/components/Wheel';
+import { livesOn } from '@/core/config/features';
+import { MONETIZATION } from '@/core/config/monetization';
+import { claimDailyReward, dailyRewardStatus, rewardForDay } from '@/core/daily';
+import { dayKeyOf } from '@/core/dates';
+import { equipItem, owns } from '@/core/economy';
+import { formatDuration, msUntilMidnight } from '@/core/duration';
+import { createRng } from '@/core/rng';
 import { secondsToNextChest ,
   adBonuses,
   applyWheelPrize,
@@ -32,27 +32,27 @@ import { secondsToNextChest ,
   unlockStatus,
   wheelSlots,
   wheelStatus,
-} from '@/game/rewards';
+} from '@/core/rewards';
 
-import { itemById } from '@/game/shopItems';
-import { canClaimVipDaily, isVip } from '@/game/vip';
-import { t, useLanguage } from '@/i18n';
-import { claimVipBonus } from '@/services/subscription';
+import { itemById } from '@/core/shopItems';
+import { canClaimVipDaily, isVip } from '@/core/vip';
+import { t, useLanguage } from '@/core/i18n';
+import { claimVipBonus } from '@/core/services/subscription';
 import { ShopPreview } from '@/render/ShopPreview';
-import { ads } from '@/services/ads';
-import { track } from '@/services/analytics';
-import { playSfx } from '@/services/audio';
-import { Haptics, notify } from '@/services/haptics';
-import { livePlaySeconds } from '@/services/playTime';
-import { getProfile, updateProfile, useProfile } from '@/storage/profile';
-import { Target } from '@/tour/targets';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { CoinAmount, CoinIcon } from '@/ui/CoinIcon';
-import { Icon } from '@/ui/Icon';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
+import { ads } from '@/core/services/ads';
+import { track } from '@/core/services/analytics';
+import { playSfx } from '@/core/services/audio';
+import { Haptics, notify } from '@/core/services/haptics';
+import { livePlaySeconds } from '@/core/services/playTime';
+import { getProfile, updateProfile, useProfile } from '@/core/storage/profile';
+import { Target } from '@/core/tour/targets';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { CoinAmount, CoinIcon } from '@/core/ui/CoinIcon';
+import { Icon } from '@/core/ui/Icon';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
 
 /** A clock that ticks every second while the panel is open (the countdowns and the gauge of play time). */
 function useNow(): number {

@@ -3,12 +3,12 @@ jest.mock('@react-native-async-storage/async-storage', () => require('@react-nat
 import fs from 'fs';
 import path from 'path';
 
-import { MONETIZATION } from '../src/config/monetization';
-import { formatDuration, msUntilMidnight } from '../src/game/duration';
-import { applyProduct, defaultProfile } from '../src/game/economy';
-import { freshLives, grantInfinite, viewOf } from '../src/game/lives';
-import { claimFreeCoins, nextGiftIn, secondsToNextChest } from '../src/game/rewards';
-import i18n from '../src/i18n';
+import { MONETIZATION } from '../src/core/config/monetization';
+import { formatDuration, msUntilMidnight } from '../src/core/duration';
+import { applyProduct, defaultProfile } from '../src/core/economy';
+import { freshLives, grantInfinite, viewOf } from '../src/core/lives';
+import { claimFreeCoins, nextGiftIn, secondsToNextChest } from '../src/core/rewards';
+import i18n from '../src/core/i18n';
 
 const MIN = 60_000;
 const HOUR = 3_600_000;
@@ -42,7 +42,7 @@ describe('the countdown formats', () => {
   });
 
   it('is computed from a saved time, not from a timer that counts down: it is right after the app was away', () => {
-    const component = src('ui/Countdown.tsx');
+    const component = src('core/ui/Countdown.tsx');
     expect(component).toContain('until - now');
     expect(component).toContain('Date.now()');
     expect(component).toContain("AppState.addEventListener('change'");
@@ -90,7 +90,7 @@ describe('the lives', () => {
     const both = applyProduct(bought, 'paintparking_infinite_lives_24h')!;
     expect(both.lives.infiniteUntil).toBeGreaterThan(Date.now() + 24 * HOUR + 59 * MIN);
     expect((MONETIZATION.lives as Record<string, unknown>).infiniteHourCoins).toBeUndefined();
-    expect(src('storage/lives.ts')).not.toContain('infiniteHourWithCoins');
+    expect(src('core/storage/lives.ts')).not.toContain('infiniteHourWithCoins');
   });
 });
 
@@ -112,10 +112,10 @@ describe('the gains use the values of the config as they are', () => {
       }
     };
     walk(path.join(__dirname, '../src'));
-    expect(users.sort()).toEqual(['config/monetization.ts', 'game/economy.ts', 'game/tour.ts']);
-    expect(src('game/rewards.ts')).not.toContain('earnPlayed');
-    expect(src('game/rewards.ts')).not.toContain('scaledEarning');
-    expect(src('game/vip.ts')).not.toContain('earnPlayed');
+    expect(users.sort()).toEqual(['core/config/monetization.ts', 'core/economy.ts', 'core/tour.ts']);
+    expect(src('core/rewards.ts')).not.toContain('earnPlayed');
+    expect(src('core/rewards.ts')).not.toContain('scaledEarning');
+    expect(src('core/vip.ts')).not.toContain('earnPlayed');
   });
 });
 
@@ -138,16 +138,16 @@ describe('the label of the gifts button', () => {
 
 describe('the countdowns are placed where the brief asks', () => {
   it('lives, daily reward, wheel, free coins, ad unlock, play chests, ad bonus, daily challenge, starter pack, VIP, step bar, gifts', () => {
-    expect(src('ui/LivesPill.tsx')).toContain('formatDuration');
-    expect(src('components/NoLivesCard.tsx')).toContain('formatDuration');
+    expect(src('core/ui/LivesPill.tsx')).toContain('formatDuration');
+    expect(src('core/components/NoLivesCard.tsx')).toContain('formatDuration');
     const gifts = src('app/gifts.tsx');
     for (const key of ['gifts.nextRewardIn', 'gifts.freeSpinIn', 'gifts.nextAdIn', 'gifts.moreMinutes', 'gifts.endsIn']) expect(gifts).toContain(key);
-    expect(src('components/FreeCoins.tsx')).toContain('formatDuration');
+    expect(src('core/components/FreeCoins.tsx')).toContain('formatDuration');
     expect(src('app/daily.tsx')).toContain("t('daily.newIn')");
-    expect(src('components/Modals.tsx')).toContain("t('shop.expiresIn'");
-    expect(src('components/ShopOffers.tsx')).toContain('offers.expiresPrefix');
+    expect(src('core/components/Modals.tsx')).toContain("t('shop.expiresIn'");
+    expect(src('core/components/ShopOffers.tsx')).toContain('offers.expiresPrefix');
     expect(src('app/vip-account.tsx')).toContain("t('vip.account.renewsIn')");
-    expect(src('components/StepBar.tsx')).toContain("t('hud.levelsLeft'");
-    expect(src('components/LevelHud.tsx')).toContain('<GiftCaption');
+    expect(src('core/components/StepBar.tsx')).toContain("t('hud.levelsLeft'");
+    expect(src('core/components/LevelHud.tsx')).toContain('<GiftCaption');
   });
 });

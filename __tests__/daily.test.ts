@@ -1,4 +1,4 @@
-import { MONETIZATION } from '../src/config/monetization';
+import { MONETIZATION } from '../src/core/config/monetization';
 import {
   addDays,
   dayKeyAt,
@@ -9,7 +9,7 @@ import {
   daysInMonth,
   fromDayNumber,
   weekdayMonday0,
-} from '../src/game/dates';
+} from '../src/core/dates';
 import {
   claimDailyReward,
   completeDaily,
@@ -19,8 +19,8 @@ import {
   rewardForDay,
   saveStreak,
   streakStatus,
-} from '../src/game/daily';
-import { defaultProfile, grantItem, owns, type Profile } from '../src/game/economy';
+} from '../src/core/daily';
+import { defaultProfile, grantItem, owns, type Profile } from '../src/core/economy';
 
 const day = (n: number) => addDays('2026-05-01', n);
 

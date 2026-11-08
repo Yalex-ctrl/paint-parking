@@ -1,87 +1,148 @@
 import { z } from 'zod';
 
-import { emptyFeatures, type Features, type Level } from './types';
+import { compile } from './engine';
+import {
+  MECHANICS,
+  OBSTACLE_KINDS,
+  VEHICLE_COLORS,
+  mechanicsOf,
+  vehicleCells,
+  type Dir,
+  type Gate,
+  type Level,
+  type LotShape,
+  type Obstacle,
+  type OneWay,
+  type Vehicle,
+} from './types';
 
 /**
- * The format of a level, as a schema. Every file of levels (the campaign, the daily challenges) goes through `normalizeLevel` when it
- * is loaded: the lists a file may lack (the files made before the slides, the platforms or the collapsing floor have no such list) are
- * filled with [] there, once, so no other piece of the game ever has to wonder whether a list exists. In a development build the
- * level is also checked against the schema (and the app stops at once on a malformed one); a test checks every file.
+ * The format of a level, as a schema. The files hold a compact form (short keys, tuples, whatever can be worked out is left
+ * out); `decodeLevel` turns it into a `Level`. Every file of levels (the campaign, the daily challenges) goes through it when it is
+ * loaded; a development build also checks the schema, and a test checks every file and plays every solution.
  */
 const int = z.number().int();
-const cell = z.tuple([int, int]);
 const dir = z.enum(['U', 'D', 'L', 'R']);
-const cells = z.array(cell).default([]);
+const SHAPES = ['rect', 'L', 'cross', 'islands'] as const;
 
-const slide = z.object({
-  entry: cell,
-  mouth: dir,
-  exit: cell,
-  exitDir: dir,
-  path: z.array(cell),
-  shape: z.enum(['line', 'L', 'S', 'spiral']),
+export const compactLevelSchema = z.object({
+  /** id, seed, rows, columns */
+  i: int.positive(),
+  s: z.number(),
+  r: int.positive(),
+  c: int.positive(),
+  /** vehicles: [row, col, front direction, length, colour] (the id is the index) */
+  v: z.array(z.tuple([int.min(0), int.min(0), dir, z.union([z.literal(2), z.literal(3)]), int.min(0).max(VEHICLE_COLORS - 1)])).min(1),
+  /** obstacles: [row, col, kind index] */
+  o: z.array(z.tuple([int.min(0), int.min(0), int.min(0).max(OBSTACLE_KINDS.length - 1)])).default([]),
+  /** voids: [row, col] */
+  x: z.array(z.tuple([int.min(0), int.min(0)])).default([]),
+  /** gates: [side, first lane, last lane, vehicles needed] */
+  g: z.array(z.tuple([dir, int.min(0), int.min(0), int.positive()])).default([]),
+  /** one-way lanes: [direction, lane] */
+  w: z.array(z.tuple([dir, int.min(0)])).default([]),
+  /** the solution: vehicle ids in the order they leave */
+  sol: z.array(int.min(0)),
+  /** difficulty, layers, mean free, mean chain, traps, fill (percent) */
+  d: z.number(),
+  y: int.min(0),
+  f: z.number(),
+  a: z.number(),
+  t: int.min(0),
+  p: z.number().min(0).max(100),
+  /** shape of the lot */
+  h: z.enum(SHAPES).default('rect'),
+  /** mechanic of the tutorial bubble */
+  tu: z.enum(MECHANICS as unknown as [string, ...string[]]).optional(),
 });
 
-const featuresSchema = z.object({
-  stops: cells,
-  corners: z.array(z.object({ r: int, c: int, a: dir, b: dir })).default([]),
-  portals: z.array(z.object({ a: cell, b: cell })).default([]),
-  doubles: cells,
-  fragile: cells,
-  bombs: cells,
-  coins: cells,
-  slides: z.array(slide).default([]),
-  raised: cells,
-  ramps: z.array(z.object({ r: int, c: int, up: dir })).default([]),
-  collapse: cells,
-});
+export type CompactLevel = z.input<typeof compactLevelSchema>;
 
-const mechanic = z.enum(['stop', 'corner', 'slide', 'portal', 'double', 'tier', 'fragile', 'bomb', 'collapse']);
-
-export const levelSchema = z.object({
-  id: int,
-  seed: z.number(),
-  rows: int.positive(),
-  cols: int.positive(),
-  grid: z.array(z.string()),
-  start: cell,
-  exit: z.object({ r: int, c: int, dir: dir }),
-  entry: z.object({ r: int, c: int, side: dir }).optional(),
-  color: z.string(),
-  solution: z.string(),
-  difficulty: z.number(),
-  floorCount: int,
-  layers: int,
-  deadEnds: int,
-  branches: int,
-  features: featuresSchema.default(() => ({ ...emptyFeatures() })),
-  mechanics: z.array(mechanic).default([]),
-  tutorial: z.string().optional(),
-  camTilt: z.number().min(0).max(5).optional(),
-  /** The star mechanic of a daily challenge, and the day of the week it belongs to (see game/dailyMechanics.ts). */
-  star: mechanic.optional(),
-});
-
-/** What a level file may hold, before normalisation. */
-export type RawLevel = z.input<typeof levelSchema>;
-
-/**
- * The level as the game uses it: every list present (empty when the file has none). Always cheap (no schema run in a release build);
- * in a development build the level is validated too, and a malformed one throws with the id and the path of the mistake.
- */
-export function normalizeLevel(raw: unknown): Level {
-  const r = raw as Level;
-  const level: Level = { ...r, features: { ...emptyFeatures(), ...(r.features as Partial<Features>) }, mechanics: r.mechanics ?? [] };
-  if (typeof __DEV__ !== 'undefined' && __DEV__) validateLevel(level);
-  return level;
+export function encodeLevel(level: Level): CompactLevel {
+  const out: CompactLevel = {
+    i: level.id,
+    s: level.seed,
+    r: level.rows,
+    c: level.cols,
+    v: level.vehicles.map((v) => [v.r, v.c, v.dir, v.len, v.color]),
+    sol: level.solution,
+    d: level.difficulty,
+    y: level.layers,
+    f: level.avgFree,
+    a: level.avgChain,
+    t: level.traps,
+    p: Math.round(level.fill * 100),
+  };
+  if (level.obstacles.length) out.o = level.obstacles.map((o) => [o.r, o.c, OBSTACLE_KINDS.indexOf(o.kind)]);
+  if (level.voids.length) out.x = level.voids;
+  if (level.gates.length) out.g = level.gates.map((g) => [g.side, g.from, g.to, g.need]);
+  if (level.oneWays.length) out.w = level.oneWays.map((w) => [w.dir, w.lane]);
+  if (level.shape !== 'rect') out.h = level.shape;
+  if (level.tutorial) out.tu = level.tutorial;
+  return out;
 }
 
-/** Throws a readable error if a level does not follow the schema. */
-export function validateLevel(raw: unknown): void {
-  const result = levelSchema.safeParse(raw);
-  if (!result.success) {
-    const id = (raw as { id?: unknown })?.id;
-    const first = result.error.issues[0];
+/** The level as the game uses it. In a development build a malformed level throws with its id and the path of the mistake. */
+export function decodeLevel(raw: unknown): Level {
+  const parsed = compactLevelSchema.safeParse(raw);
+  if (!parsed.success) {
+    const id = (raw as { i?: unknown })?.i;
+    const first = parsed.error.issues[0];
     throw new Error(`Malformed level ${String(id)}: ${first.path.join('.')} ${first.message}`);
   }
+  const c = parsed.data;
+  const vehicles: Vehicle[] = c.v.map(([r, col, d, len, color], id) => ({ id, r, c: col, dir: d as Dir, len, color }));
+  const obstacles: Obstacle[] = c.o.map(([r, col, k]) => ({ r, c: col, kind: OBSTACLE_KINDS[k] }));
+  const gates: Gate[] = c.g.map(([side, from, to, need]) => ({ side: side as Dir, from, to, need }));
+  const oneWays: OneWay[] = c.w.map(([d, lane]) => ({ dir: d as Dir, lane }));
+  const base = { obstacles, vehicles, gates, oneWays };
+  return {
+    id: c.i,
+    seed: c.s,
+    rows: c.r,
+    cols: c.c,
+    voids: c.x.map(([r, col]) => [r, col] as [number, number]),
+    ...base,
+    solution: c.sol,
+    optimal: vehicles.length,
+    difficulty: c.d,
+    layers: c.y,
+    avgFree: c.f,
+    avgChain: c.a,
+    traps: c.t,
+    fill: c.p / 100,
+    shape: c.h as LotShape,
+    mechanics: mechanicsOf(base),
+    tutorial: c.tu as Level['tutorial'],
+  };
+}
+
+/** What is wrong with the arrangement of a level (overlaps, things outside the lot, a bad solution...), or null. */
+export function structuralProblem(level: Level): string | null {
+  const { rows, cols } = level;
+  const taken = new Set<number>();
+  const inside = (r: number, c: number) => r >= 0 && r < rows && c >= 0 && c < cols;
+  for (const [r, c] of level.voids) {
+    if (!inside(r, c)) return `void ${r},${c} is outside the lot`;
+    taken.add(r * cols + c);
+  }
+  for (const o of level.obstacles) {
+    if (!inside(o.r, o.c)) return `obstacle ${o.r},${o.c} is outside the lot`;
+    if (taken.has(o.r * cols + o.c)) return `obstacle ${o.r},${o.c} is on something else`;
+    taken.add(o.r * cols + o.c);
+  }
+  for (const v of level.vehicles) {
+    if (v.id !== level.vehicles.indexOf(v)) return `vehicle ${v.id} has the wrong id`;
+    for (const [r, c] of vehicleCells(v)) {
+      if (!inside(r, c)) return `vehicle ${v.id} leaves the lot`;
+      if (taken.has(r * cols + c)) return `vehicle ${v.id} overlaps something at ${r},${c}`;
+      taken.add(r * cols + c);
+    }
+  }
+  const lanes = (side: Dir) => (side === 'L' || side === 'R' ? rows : cols);
+  for (const g of level.gates) if (g.from > g.to || g.to >= lanes(g.side)) return `gate ${g.side} ${g.from}-${g.to} is outside the edge`;
+  for (const w of level.oneWays) if (w.lane >= lanes(w.dir)) return `one-way lane ${w.lane} does not exist`;
+  if (level.solution.length !== level.vehicles.length || new Set(level.solution).size !== level.vehicles.length) return 'the solution does not list every vehicle once';
+  compile(level);
+  return null;
 }

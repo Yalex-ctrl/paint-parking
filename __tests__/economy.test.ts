@@ -1,4 +1,4 @@
-import { MONETIZATION } from '../src/config/monetization';
+import { MONETIZATION } from '../src/core/config/monetization';
 import {
   applyCoinPack,
   applyRestore,
@@ -23,8 +23,8 @@ import {
   shouldOfferStarter,
   spendCoins,
   starterRemainingMs,
-} from '../src/game/economy';
-import { DEFAULT_BALL, DEFAULT_PAINT, RARITY_PRICE, SHOP_ITEMS, itemById, itemsOfKind } from '../src/game/shopItems';
+} from '../src/core/economy';
+import { DEFAULT_BALL, DEFAULT_PAINT, RARITY_PRICE, SHOP_ITEMS, itemById, itemsOfKind } from '../src/core/shopItems';
 
 describe('profile', () => {
   it('starts empty with the default ball and paint owned and equipped', () => {

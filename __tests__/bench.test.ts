@@ -1,4 +1,4 @@
-import { benchFinish, benchFrame, benchIsDone, benchPhase, benchStart, benchTask, benchTimed, benchTransitions } from '../src/render/bench';
+import { benchFinish, benchFrame, benchIsDone, benchPhase, benchStart, benchTask, benchTimed, benchTransitions } from '../src/core/render/bench';
 
 describe('the bench of the bridge', () => {
   const gpu = { programs: 10, geometries: 20, textures: 5 };

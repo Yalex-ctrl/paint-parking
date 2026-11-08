@@ -1,5 +1,5 @@
-import { defaultProfile } from '../src/game/economy';
-import { DAY_MS, autoRenewSimulated, expireVip, startVip } from '../src/game/vip';
+import { defaultProfile } from '../src/core/economy';
+import { DAY_MS, autoRenewSimulated, expireVip, startVip } from '../src/core/vip';
 
 describe('the simulated pass renews by itself', () => {
   const t0 = Date.UTC(2026, 9, 1);

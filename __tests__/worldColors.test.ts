@@ -1,4 +1,4 @@
-import { themeForLevel, worldIndexOf } from '../src/game/worlds';
+import { themeForLevel, worldIndexOf } from '../src/core/worlds';
 
 const rgb = (css: string): [number, number, number] => {
   const n = parseInt(css.slice(1), 16);

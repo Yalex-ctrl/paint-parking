@@ -1,6 +1,6 @@
-import { SceneErrorBoundary, installFrameGuard } from '../src/render/SceneGuard';
-import { currentToast, clearToastForTests } from '../src/services/toast';
-import { setAnalyticsImplementation } from '../src/services/analytics';
+import { SceneErrorBoundary, installFrameGuard } from '../src/core/render/SceneGuard';
+import { currentToast, clearToastForTests } from '../src/core/services/toast';
+import { setAnalyticsImplementation } from '../src/core/services/analytics';
 
 describe('the safety nets of the game scene', () => {
   const events: { event: string; params?: unknown }[] = [];

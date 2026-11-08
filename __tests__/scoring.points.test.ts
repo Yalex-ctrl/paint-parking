@@ -1,8 +1,8 @@
-import { SCORING } from '../src/config/scoring';
-import { Chrono } from '../src/game/chrono';
-import { isNewBestScore, levelScore, movePoints, roundScore, scoreLines, targetSeconds, timePoints, totalScore } from '../src/game/points';
-import { defaultProfile } from '../src/game/economy';
-import { settleDaily, settleVictory } from '../src/game/victory';
+import { SCORING } from '../src/core/config/scoring';
+import { Chrono } from '../src/core/chrono';
+import { isNewBestScore, levelScore, movePoints, roundScore, scoreLines, targetSeconds, timePoints, totalScore } from '../src/core/points';
+import { defaultProfile } from '../src/core/economy';
+import { settleDaily, settleVictory } from '../src/core/victory';
 
 describe('the points of a level', () => {
   it('give 1000 for the moves at the optimum, and less the more moves are played', () => {
@@ -13,10 +13,10 @@ describe('the points of a level', () => {
     expect(movePoints(7, 6)).toBe(1000);
   });
 
-  it('give all the points of time up to the target time (3 s + 1.5 s per optimal move), then fall in a straight line to 0 at 3 times the target', () => {
+  it('give all the points of time up to the target time (2 s + 1.2 s per vehicle), then fall in a straight line to 0 at 3 times the target', () => {
     const optimum = 8;
     const target = targetSeconds(optimum);
-    expect(target).toBe(15);
+    expect(target).toBeCloseTo(11.6, 6);
     expect(timePoints(optimum, 0)).toBe(1000);
     expect(timePoints(optimum, target)).toBe(1000);
     expect(timePoints(optimum, target * 2)).toBeCloseTo(500, 6);
@@ -37,15 +37,15 @@ describe('the points of a level', () => {
   });
 
   it('three worked examples', () => {
-    // level 20, 6 moves for an optimum of 5, 20 s (the target is 10.5 s)
+    // level 20, 6 moves for an optimum of 5, 20 s (the target is 8 s)
     const a = levelScore({ level: 20, optimum: 5, moves: 6, seconds: 20, hintUsed: false });
     expect(a.movePoints).toBeCloseTo(833.33, 1);
-    expect(a.timePoints).toBeCloseTo(1000 * (31.5 - 20) / 21, 1);
+    expect(a.timePoints).toBeCloseTo((1000 * (24 - 20)) / 16, 1);
     expect(a.total).toBe(roundScore((a.movePoints + a.timePoints) * 1.2));
     // level 100, optimal and fast
     expect(levelScore({ level: 100, optimum: 12, moves: 12, seconds: 5, hintUsed: false }).total).toBe(4000);
     // level 200, twice the moves, twice the target time, with a hint
-    const c = levelScore({ level: 200, optimum: 10, moves: 20, seconds: 36, hintUsed: true });
+    const c = levelScore({ level: 200, optimum: 10, moves: 20, seconds: 28, hintUsed: true });
     expect(c.total).toBe(roundScore((500 + 500) * 3 * 0.7));
   });
 

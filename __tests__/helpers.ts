@@ -1,34 +1,38 @@
-import { measure } from '../src/game/engine';
-import { emptyFeatures, type Dir, type Features, type Level } from '../src/game/types';
+import type { Gate, Level, Obstacle, OneWay, Vehicle } from '../src/game/types';
 
-/**
- * A tiny hand-made level. `grid` includes the outer ring ('#' wall, '.' floor); the exit is on the
- * ring (by default a corner nobody can reach, so movement tests are not affected by it).
- */
-export function makeLevel(
-  grid: string[],
-  start: [number, number],
-  features: Partial<Features> = {},
-  exit: { r: number; c: number; dir: Dir } = { r: 0, c: 0, dir: 'U' },
-): Level {
-  const f: Features = { ...emptyFeatures(), ...features };
-  const { floorCount, layers } = measure(grid, f);
+type Spec = {
+  rows: number;
+  cols: number;
+  /** [row, col, front direction, length] */
+  vehicles: [number, number, Vehicle['dir'], 2 | 3][];
+  obstacles?: [number, number][];
+  voids?: [number, number][];
+  gates?: Gate[];
+  oneWays?: OneWay[];
+};
+
+/** A small lot for the rule tests. The solution and the statistics are not filled (the tests that need them ask the solver). */
+export function lot(spec: Spec): Level {
+  const obstacles: Obstacle[] = (spec.obstacles ?? []).map(([r, c]) => ({ r, c, kind: 'post' }));
   return {
-    id: 0,
+    id: 99,
     seed: 0,
-    rows: grid.length,
-    cols: grid[0].length,
-    grid,
-    start,
-    exit,
-    color: '#ff4d6d',
-    solution: '',
+    rows: spec.rows,
+    cols: spec.cols,
+    voids: spec.voids ?? [],
+    obstacles,
+    vehicles: spec.vehicles.map(([r, c, dir, len], id) => ({ id, r, c, dir, len, color: id % 12 })),
+    gates: spec.gates ?? [],
+    oneWays: spec.oneWays ?? [],
+    solution: [],
+    optimal: spec.vehicles.length,
     difficulty: 0,
-    floorCount,
-    layers,
-    deadEnds: 0,
-    branches: 0,
-    features: f,
+    layers: 0,
+    avgFree: 0,
+    avgChain: 0,
+    traps: 0,
+    fill: 0,
+    shape: 'rect',
     mechanics: [],
   };
 }

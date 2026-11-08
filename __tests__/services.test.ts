@@ -2,18 +2,18 @@ jest.mock("@react-native-async-storage/async-storage", () => require("@react-nat
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { MONETIZATION } from '../src/config/monetization';
-import { defaultProfile, earnCoins, owns } from '../src/game/economy';
-import { ads, registerMockAdHost, setAdsImplementation, type AdsService, type MockAdRequest } from '../src/services/ads';
-import { setAnalyticsImplementation, track } from '../src/services/analytics';
+import { MONETIZATION } from '../src/core/config/monetization';
+import { defaultProfile, earnCoins, owns } from '../src/core/economy';
+import { ads, registerMockAdHost, setAdsImplementation, type AdsService, type MockAdRequest } from '../src/core/services/ads';
+import { setAnalyticsImplementation, track } from '../src/core/services/analytics';
 import {
   listProducts,
   purchaseProduct,
   restorePurchases,
   setPurchasesImplementation,
   type PurchasesService,
-} from '../src/services/purchases';
-import { flushProfile, getProfile, loadProfile, resetProfileForTests, subscribeProfile, updateProfile } from '../src/storage/profile';
+} from '../src/core/services/purchases';
+import { flushProfile, getProfile, loadProfile, resetProfileForTests, subscribeProfile, updateProfile } from '../src/core/storage/profile';
 
 describe('analytics', () => {
   afterEach(() => setAnalyticsImplementation(null));
@@ -167,7 +167,7 @@ describe('profile store', () => {
     const storage = mod.default ?? mod;
     await storage.clear();
     await storage.setItem("paint-parking/wallet/v1", JSON.stringify({ coins: 37, collected: { 12: 3 } }));
-    const fresh = require("../src/storage/profile") as typeof import("../src/storage/profile");
+    const fresh = require("../src/core/storage/profile") as typeof import("../src/core/storage/profile");
     const p = await fresh.loadProfile();
     expect(p.coins).toBe(37);
     expect(p.collectedCoins[12]).toBe(3);

@@ -1,30 +1,30 @@
-import { howText, itemName, rarityName } from '@/i18n/names';
-import { formatNumber , t, useLanguage } from '@/i18n';
+import { howText, itemName, rarityName } from '@/core/i18n/names';
+import { formatNumber , t, useLanguage } from '@/core/i18n';
 
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useIsFocused, useLocalSearchParams } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { FlatList, Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { ZoomIn, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { buyItem, equipItem, owns, type Profile } from '@/game/economy';
-import { SHOP_FILTERS, filterItems, isNewItem, markSeen, sortItems, type ShopFilter } from '@/game/shopCatalog';
-import { SHOP_ITEMS, itemsOfKind, type ItemKind, type ShopItem } from '@/game/shopItems';
+import { buyItem, equipItem, owns, type Profile } from '@/core/economy';
+import { SHOP_FILTERS, filterItems, isNewItem, markSeen, sortItems, type ShopFilter } from '@/core/shopCatalog';
+import { SHOP_ITEMS, itemsOfKind, type ItemKind, type ShopItem } from '@/core/shopItems';
 import { ShopPreview } from '@/render/ShopPreview';
-import { useThumbnail } from '@/render/useThumbnail';
-import { track } from '@/services/analytics';
-import { playSfx } from '@/services/audio';
-import { Offers, OffersScrollContext } from '@/components/ShopOffers';
-import { registerTourAction } from '@/tour/targets';
-import { updateProfile, useProfile } from '@/storage/profile';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { CoinAmount, CoinIcon } from '@/ui/CoinIcon';
-import { Icon, type IconName } from '@/ui/Icon';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, radius, rarityColors, fontSizes } from '@/ui/theme';
+import { useThumbnail } from '@/core/render/useThumbnail';
+import { track } from '@/core/services/analytics';
+import { playSfx } from '@/core/services/audio';
+import { Offers, OffersScrollContext } from '@/core/components/ShopOffers';
+import { registerTourAction } from '@/core/tour/targets';
+import { updateProfile, useProfile } from '@/core/storage/profile';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { CoinAmount, CoinIcon } from '@/core/ui/CoinIcon';
+import { Icon, type IconName } from '@/core/ui/Icon';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, radius, rarityColors, fontSizes } from '@/core/ui/theme';
 
 type Tab = ItemKind | 'offers';
 const TABS: { id: Tab; icon: IconName }[] = [

@@ -1,27 +1,27 @@
-import { formatNumber, priceText, t, useLanguage } from '@/i18n';
+import { formatNumber, priceText, t, useLanguage } from '@/core/i18n';
 
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MONETIZATION } from '@/config/monetization';
-import { canBreakPiggy, coinsUntilBreakable, fillRatio } from '@/game/piggy';
-import { playSfx } from '@/services/audio';
-import { Haptics, notify } from '@/services/haptics';
-import { track } from '@/services/analytics';
-import { purchaseProduct } from '@/services/purchases';
-import { useProfile } from '@/storage/profile';
-import { Button3D } from '@/ui/Button3D';
-import { CoinIcon } from '@/ui/CoinIcon';
-import { PiggyBank } from '@/ui/PiggyBank';
-import { PiggyGauge } from '@/ui/PiggyGauge';
-import { ScreenHeader } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
-import { testerTools } from '@/config/tester';
+import { MONETIZATION } from '@/core/config/monetization';
+import { canBreakPiggy, coinsUntilBreakable, fillRatio } from '@/core/piggy';
+import { playSfx } from '@/core/services/audio';
+import { Haptics, notify } from '@/core/services/haptics';
+import { track } from '@/core/services/analytics';
+import { purchaseProduct } from '@/core/services/purchases';
+import { useProfile } from '@/core/storage/profile';
+import { Button3D } from '@/core/ui/Button3D';
+import { CoinIcon } from '@/core/ui/CoinIcon';
+import { PiggyBank } from '@/core/ui/PiggyBank';
+import { PiggyGauge } from '@/core/ui/PiggyGauge';
+import { ScreenHeader } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
+import { testerTools } from '@/core/config/tester';
 
 const SHARDS = Array.from({ length: 8 }, (_, i) => ({ angle: (i / 8) * Math.PI * 2 + 0.3, dist: 90 + (i % 3) * 30, size: 18 + (i % 4) * 6 }));
 const COINS = Array.from({ length: 14 }, (_, i) => ({ angle: -Math.PI / 2 + ((i - 6.5) / 14) * Math.PI * 1.1, dist: 120 + (i % 4) * 40, delay: (i % 5) * 0.04 }));

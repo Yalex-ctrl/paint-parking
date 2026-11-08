@@ -1,16 +1,25 @@
-/** Prints a difficulty summary of assets/levels.json: `npx tsx scripts/level-stats.ts`. */
-import levelsJson from '../assets/levels.json';
-import { countBranches, countDeadEnds } from '../src/game/generator';
+/**
+ * Prints the difficulty of lots built WITHOUT steering, to calibrate the curve (game/generator.ts targetDifficulty):
+ *   npx tsx scripts/level-stats.ts 6 50 --samples 8
+ * Columns: id, how many of the samples worked, then the min / mean / max difficulty and the mean number of vehicles and layers.
+ */
+import { generateLevel, recipeFor } from '../src/game/generator';
 import type { Level } from '../src/game/types';
 
-const levels = levelsJson as unknown as Level[];
+const ids = process.argv.slice(2).filter((a) => /^\d+$/.test(a)).map(Number);
+const samples = Number(process.argv[process.argv.indexOf('--samples') + 1] || 8);
 
-console.log('id    grille  cases  coups  culs-de-sac  embranchements');
-for (const id of [1, 10, 15, 25, 50, 100, 250, 500]) {
-  const l = levels[id - 1];
+for (const id of ids) {
+  const recipe = recipeFor(id);
+  const found: Level[] = [];
+  let tries = 0;
+  while (found.length < samples && tries < samples * 40) {
+    const level = generateLevel(id, recipe, 1000 + tries++);
+    if (level) found.push(level);
+  }
+  const d = found.map((l) => l.difficulty);
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
   console.log(
-    `${String(id).padEnd(5)} ${`${l.cols - 2}x${l.rows - 2}`.padEnd(7)} ${String(l.floorCount).padEnd(6)} ${String(l.solution.length).padEnd(6)} ${String(countDeadEnds(l.grid)).padEnd(12)} ${countBranches(l.grid)}`,
+    `#${id} ${recipe.cols}x${recipe.rows} ok=${found.length}/${tries} diff min=${Math.min(...d).toFixed(1)} mean=${mean(d).toFixed(1)} max=${Math.max(...d).toFixed(1)} vehicles=${mean(found.map((l) => l.vehicles.length)).toFixed(1)} layers=${mean(found.map((l) => l.layers)).toFixed(1)}`,
   );
 }
-const bad = levels.filter((l) => l.id >= 15 && (countDeadEnds(l.grid) < 2 || countBranches(l.grid) < 1));
-console.log(`\nniveaux >= 15 avec < 2 culs-de-sac ou 0 embranchement : ${bad.length}/${levels.length - 14}`);

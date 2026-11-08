@@ -1,25 +1,25 @@
-import { useVipStatus } from '@/storage/useVip';
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useVipStatus } from '@/core/storage/useVip';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BenefitRow, VIP_BENEFITS, planPrice } from '@/components/VipParts';
-import { MONETIZATION } from '@/config/monetization';
-import { nextVipBall } from '@/game/vip';
-import { formatDate, t, useLanguage } from '@/i18n';
-import { itemName } from '@/i18n/names';
+import { BenefitRow, VIP_BENEFITS, planPrice } from '@/core/components/VipParts';
+import { MONETIZATION } from '@/core/config/monetization';
+import { nextVipBall } from '@/core/vip';
+import { formatDate, t, useLanguage } from '@/core/i18n';
+import { itemName } from '@/core/i18n/names';
 import { ShopPreview } from '@/render/ShopPreview';
-import { checkSubscription } from '@/services/subscription';
-import { useProfile } from '@/storage/profile';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { Icon } from '@/ui/Icon';
-import { Countdown } from '@/ui/Countdown';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
+import { checkSubscription } from '@/core/services/subscription';
+import { useProfile } from '@/core/storage/profile';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { Icon } from '@/core/ui/Icon';
+import { Countdown } from '@/core/ui/Countdown';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
 
 /** "Mon Pass VIP": the state of the subscription, the balls it gave, and the way to manage or cancel it (in the Apple account). */
 export default function VipAccountScreen() {

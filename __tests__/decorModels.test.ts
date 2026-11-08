@@ -3,8 +3,8 @@ import { join } from 'path';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-import { DECOR_MODELS } from '../src/render/decor/catalog';
-import { proceduralParts } from '../src/render/decor/procedural';
+import { DECOR_MODELS } from '../src/core/render/decor/catalog';
+import { proceduralParts } from '../src/core/render/decor/procedural';
 
 /** Parses the real .glb files exactly like the app does (ArrayBuffer -> GLTFLoader). */
 describe('decor models', () => {

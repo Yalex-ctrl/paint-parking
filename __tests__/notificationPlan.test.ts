@@ -1,6 +1,6 @@
-import { completeDaily } from '../src/game/daily';
-import { defaultProfile, type Profile } from '../src/game/economy';
-import { planDate, planNotification, shouldAskNotificationPermission } from '../src/game/notificationPlan';
+import { completeDaily } from '../src/core/daily';
+import { defaultProfile, type Profile } from '../src/core/economy';
+import { planDate, planNotification, shouldAskNotificationPermission } from '../src/core/notificationPlan';
 
 const at = (iso: string) => {
   const [d, t = '00:00'] = iso.split(' ');

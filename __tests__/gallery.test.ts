@@ -13,8 +13,8 @@ import {
   piecesEarned,
   revealOrder,
   revealedPixels,
-} from '../src/game/gallery';
-import { encodePng, toBase64 } from '../src/game/png';
+} from '../src/core/gallery';
+import { encodePng, toBase64 } from '../src/core/png';
 
 describe('pictures', () => {
   it('has 50 pictures of 16x16, enough for 500 levels at one per 10', () => {

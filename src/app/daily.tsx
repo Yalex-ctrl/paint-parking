@@ -1,32 +1,31 @@
-import { itemLabel, itemName } from '@/i18n/names';
-import { formatDate , t, useLanguage } from '@/i18n';
+import { itemLabel, itemName } from '@/core/i18n/names';
+import { formatDate , t, useLanguage } from '@/core/i18n';
 
-import { useScreenReady } from '@/ui/useScreenReady';
+import { useScreenReady } from '@/core/ui/useScreenReady';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MONETIZATION } from '@/config/monetization';
-import { dailyCoins, monthCalendar, saveStreak, streakStatus } from '@/game/daily';
-import { peekEarning } from '@/game/economy';
-import { dayKeyOf, parseDay } from '@/game/dates';
-import { dailyLoadout, dailyThemeName, loadoutText } from '@/game/dailyLoadout';
-import { dailyIndexForDay } from '@/game/dailyLevels';
-import { MECHANIC_ICONS, starsForIndex } from '@/game/dailyMechanics';
-import { useThumbnail } from '@/render/useThumbnail';
-import { ads } from '@/services/ads';
-import { updateProfile, useProfile } from '@/storage/profile';
-import { Button3D } from '@/ui/Button3D';
-import { Card3D } from '@/ui/Card3D';
-import { CoinAmount } from '@/ui/CoinIcon';
-import { Icon, type IconName } from '@/ui/Icon';
-import { msUntilMidnight } from '@/game/duration';
-import { Countdown } from '@/ui/Countdown';
-import { Target } from '@/tour/targets';
-import { ScreenHeader, TopFade } from '@/ui/ScreenHeader';
-import { Text } from '@/ui/Text';
-import { MARGIN, colors, fontSizes } from '@/ui/theme';
+import { MONETIZATION } from '@/core/config/monetization';
+import { dailyCoins, monthCalendar, saveStreak, streakStatus } from '@/core/daily';
+import { peekEarning } from '@/core/economy';
+import { dayKeyOf, parseDay } from '@/core/dates';
+import { dailyLoadout, loadoutText } from '@/core/dailyLoadout';
+import { dailyLevelForDay } from '@/game/dailyLevels';
+import { useThumbnail } from '@/core/render/useThumbnail';
+import { ads } from '@/core/services/ads';
+import { updateProfile, useProfile } from '@/core/storage/profile';
+import { Button3D } from '@/core/ui/Button3D';
+import { Card3D } from '@/core/ui/Card3D';
+import { CoinAmount } from '@/core/ui/CoinIcon';
+import { Icon } from '@/core/ui/Icon';
+import { msUntilMidnight } from '@/core/duration';
+import { Countdown } from '@/core/ui/Countdown';
+import { Target } from '@/core/tour/targets';
+import { ScreenHeader, TopFade } from '@/core/ui/ScreenHeader';
+import { Text } from '@/core/ui/Text';
+import { MARGIN, colors, fontSizes } from '@/core/ui/theme';
 
 /** The initials of the week, Monday first (a Monday is 2024-01-01), in the language on screen. */
 const weekdayInitials = (): string[] => Array.from({ length: 7 }, (_, i) => formatDate(new Date(2024, 0, 1 + i), { weekday: 'narrow' }).toUpperCase());
@@ -37,24 +36,14 @@ function DailyIntro({ day }: { day: string }) {
   const ball = useThumbnail('ball', kit.ball.id);
   const paint = useThumbnail('paint', kit.paint.id);
   const { year, month, day: dom } = parseDay(day);
-  const index = dailyIndexForDay(day);
-  const stars = starsForIndex(index);
+  const shape = dailyLevelForDay(day).shape;
   return (
     <Card3D innerStyle={styles.intro}>
       <Text style={styles.introKicker}>{t('daily.kicker')}</Text>
       <Text style={styles.introDate}>
         {formatDate(new Date(year, month - 1, dom), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       </Text>
-      {/* The mechanic of the day, announced with a small picture of it. */}
-      <View style={styles.introStars}>
-        {stars.map((m) => (
-          <View key={m} style={styles.introStar}>
-            <Icon name={MECHANIC_ICONS[m] as IconName} size={26} color={colors.gold} />
-          </View>
-        ))}
-      </View>
-      <Text style={styles.introToday}>{t(`daily.star.${index % 7}`)}</Text>
-      <Text style={styles.introTheme}>{t('daily.theme', { name: dailyThemeName(day) })}</Text>
+      <Text style={styles.introTheme}>{t('daily.theme', { name: t(`daily.shapes.${shape}`) })}</Text>
       <View style={styles.introKit}>
         <View style={styles.introItem}>
           {ball ? <Image source={{ uri: ball }} style={styles.introImage} /> : <View style={styles.introImage} />}

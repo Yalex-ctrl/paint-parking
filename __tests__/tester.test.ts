@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { shiftTime } from '../src/game/testerClock';
+import { shiftTime } from '../src/core/testerClock';
 
 describe('the tester tools', () => {
   const eas = JSON.parse(readFileSync(resolve(__dirname, '../eas.json'), 'utf8')) as { build: Record<string, { env?: Record<string, string> }> };
@@ -25,19 +25,19 @@ describe('the tester tools', () => {
       g.__DEV__ = false;
       delete process.env.EXPO_PUBLIC_TESTER_TOOLS;
       jest.isolateModules(() => {
-        const { testerTools } = require('../src/config/tester') as typeof import('../src/config/tester');
-        const { openLevelsOn, freeCameraOn } = require('../src/config/features') as typeof import('../src/config/features');
+        const { testerTools } = require('../src/core/config/tester') as typeof import('../src/core/config/tester');
+        const { openLevelsOn, freeCameraOn } = require('../src/core/config/features') as typeof import('../src/core/config/features');
         expect(testerTools()).toBe(false);
         expect(openLevelsOn()).toBe(false);
         expect(freeCameraOn()).toBe(false);
       });
       process.env.EXPO_PUBLIC_TESTER_TOOLS = 'false';
       jest.isolateModules(() => {
-        expect((require('../src/config/tester') as typeof import('../src/config/tester')).testerTools()).toBe(false);
+        expect((require('../src/core/config/tester') as typeof import('../src/core/config/tester')).testerTools()).toBe(false);
       });
       process.env.EXPO_PUBLIC_TESTER_TOOLS = 'true';
       jest.isolateModules(() => {
-        expect((require('../src/config/tester') as typeof import('../src/config/tester')).testerTools()).toBe(true);
+        expect((require('../src/core/config/tester') as typeof import('../src/core/config/tester')).testerTools()).toBe(true);
       });
     } finally {
       g.__DEV__ = wasDev;

@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { realYearlySaving, priceText, yearlyMonthlyText } from '../src/i18n';
-import { clearStorePrices, setStorePrices } from '../src/i18n/prices';
+import { realYearlySaving, priceText, yearlyMonthlyText } from '../src/core/i18n';
+import { clearStorePrices, setStorePrices } from '../src/core/i18n/prices';
 
 const read = (f: string) => readFileSync(join(__dirname, '../src', f), 'utf8');
 
@@ -32,13 +32,13 @@ describe('the prices shown are the ones of the App Store', () => {
   });
 
   it('no screen writes a price of the config in euros by itself any more', () => {
-    for (const f of ['app/vip.tsx', 'app/piggy.tsx', 'components/ShopOffers.tsx', 'components/Modals.tsx', 'components/NoLivesCard.tsx', 'components/VipParts.tsx', 'components/VipCards.tsx', 'services/purchases.ts']) {
+    for (const f of ['app/vip.tsx', 'app/piggy.tsx', 'core/components/ShopOffers.tsx', 'core/components/Modals.tsx', 'core/components/NoLivesCard.tsx', 'core/components/VipParts.tsx', 'core/components/VipCards.tsx', 'core/services/purchases.ts']) {
       expect(read(f)).not.toMatch(/formatEur\(/);
     }
   });
 
   it('RevenueCat asks the store for the prices of every product at start-up', () => {
-    const rc = read('services/revenuecat.ts');
+    const rc = read('core/services/revenuecat.ts');
     expect(rc).toMatch(/loadStorePrices\(purchases\)/);
     expect(rc).toMatch(/getProducts\(\[\.\.\.PRODUCT_IDS, \.\.\.SUBSCRIPTION_IDS\]\)/);
   });

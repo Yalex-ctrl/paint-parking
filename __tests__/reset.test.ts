@@ -5,15 +5,15 @@ jest.mock('@react-native-async-storage/async-storage', () => require('@react-nat
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { MONETIZATION } from '../src/config/monetization';
-import { applyRemoveAds, applyStarterPack, buyItem, defaultProfile, earnCoins, owns } from '../src/game/economy';
-import { completeDaily } from '../src/game/daily';
-import { KEPT_KEYS, KEYS, PROGRESS_KEYS } from '../src/storage/keys';
-import { getProfile, resetProfileForTests, updateProfile } from '../src/storage/profile';
-import { completeLevel, loadProgress } from '../src/storage/progress';
-import { replayTutorial, resetProgress } from '../src/storage/reset';
-import { loadSettings, saveSettings } from '../src/storage/settings';
-import { loadSeenTutorials, markTutorialSeen } from '../src/storage/tutorials';
+import { MONETIZATION } from '../src/core/config/monetization';
+import { applyRemoveAds, applyStarterPack, buyItem, defaultProfile, earnCoins, owns } from '../src/core/economy';
+import { completeDaily } from '../src/core/daily';
+import { KEPT_KEYS, KEYS, PROGRESS_KEYS } from '../src/core/storage/keys';
+import { getProfile, resetProfileForTests, updateProfile } from '../src/core/storage/profile';
+import { completeLevel, loadProgress } from '../src/core/storage/progress';
+import { replayTutorial, resetProgress } from '../src/core/storage/reset';
+import { loadSettings, saveSettings } from '../src/core/storage/settings';
+import { loadSeenTutorials, markTutorialSeen } from '../src/core/storage/tutorials';
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
