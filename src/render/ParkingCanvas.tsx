@@ -9,13 +9,12 @@ import { PerfMonitor } from './PerfMonitor';
 import type { Level } from '../game/types';
 import { fitCamera, type Margins } from './cameraFit';
 import { decorKey, planDecor, type Placed } from './decorPlan';
-import { screenToGround } from './pick';
-import { linkOffset, PLATE_MARGIN, ROAD_MARGIN, ROAD_W, SLAB_H, VEHICLE_H } from './coords';
+import { pickAt, toCanvas, type Picked } from './pick';
+import { GROUND_DROP, linkOffset, VEHICLE_H } from './coords';
 import { digitTexture, emojiTexture } from './textures';
-import { arrowGeometry, crownGeometry, lightsGeometry, roofTop, shadowGeometry, carGeometry, skinGeometry } from './vehicleGeometry';
+import { arrowGeometry, crownGeometry, lightsGeometry, roofTop, shadowGeometry, carGeometry, skinGeometry, wheelGeometry, wheelLayout, WHEEL_Y } from './vehicleGeometry';
 import { specOf, type Finish } from './skinSpecs';
 import { buildLotGeometry, gateGeometry } from './lotGeometry';
-import { box, merge } from './geo';
 import { EMOJIS, PUFFS, TRAIL_CAPACITY, type Actor, type ParkingScene } from './ParkingScene';
 import { LOT_COLORS } from './palette';
 
@@ -24,34 +23,33 @@ const SKY_BG = '#a9cdee';
 
 /** What the screen needs from the scene to turn a touch into a vehicle. */
 export type PickBridge = {
+  /** The camera the scene is drawn with, as it is this very frame (not a copy: the object of the renderer). */
   camera: THREE.PerspectiveCamera | null;
+  /** The size of the canvas in points. */
   width: number;
   height: number;
-  /** The point of the ground (world x, z) under a point of the canvas (pixels), or null. */
-  ground: (x: number, y: number) => { x: number; z: number } | null;
-  /** The pixel under a point of the ground (to put the help hand on a vehicle). */
+  /** The vehicle under a point of the canvas (points from its top left): a ray against the box of each vehicle, else the nearest one. */
+  pick: (x: number, y: number, scene: ParkingScene) => Picked;
+  /** The point of the canvas (points) a point of the world falls on (to put the help hand on a vehicle). */
   toScreen: (x: number, z: number, y?: number) => { x: number; y: number } | null;
 };
 
 export function createPickBridge(): PickBridge {
-  const p = new THREE.Vector3();
   const bridge: PickBridge = {
     camera: null,
     width: 0,
     height: 0,
-    ground(x, y) {
-      if (!bridge.camera || bridge.width === 0) return null;
-      return screenToGround(bridge.camera, bridge.width, bridge.height, x, y);
+    pick(x, y, scene) {
+      if (!bridge.camera || bridge.width === 0) return { vehicle: -1, via: 'none', distance: Infinity };
+      return pickAt(bridge.camera, bridge.width, bridge.height, x, y, scene.actors);
     },
     toScreen(x, z, y = 0.3) {
       if (!bridge.camera || bridge.width === 0) return null;
-      p.set(x, y, z).project(bridge.camera);
-      return { x: ((p.x + 1) / 2) * bridge.width, y: ((1 - p.y) / 2) * bridge.height };
+      return toCanvas(bridge.camera, bridge.width, bridge.height, x, y, z);
     },
   };
   return bridge;
 }
-
 /** A level that is ready to play: its rules are compiled elsewhere, the canvas only needs the level and its scene. */
 export type Stage = { level: Level; scene: ParkingScene };
 
@@ -86,6 +84,7 @@ let shared: {
   truckShadow: THREE.BufferGeometry;
   crown: THREE.BufferGeometry;
   arrow: THREE.BufferGeometry;
+  wheel: THREE.BufferGeometry;
   body: THREE.MeshLambertMaterial;
   lit: THREE.MeshBasicMaterial;
   shadow: THREE.MeshBasicMaterial;
@@ -109,6 +108,7 @@ function sharedAssets() {
     truckShadow: shadowGeometry(3),
     crown: crownGeometry(),
     arrow: arrowGeometry(),
+    wheel: wheelGeometry(),
     body: new THREE.MeshLambertMaterial({ vertexColors: true }),
     lit: new THREE.MeshBasicMaterial({ vertexColors: true }),
     shadow: new THREE.MeshBasicMaterial({ color: '#1a1530', transparent: true, opacity: 0.28, depthWrite: false }),
@@ -130,10 +130,14 @@ function CameraRig({ level, margins, bridge }: { level: Level; margins: Margins;
   useLayoutEffect(() => {
     if (width === 0 || height === 0) return;
     fitCamera(camera, level, width, height, margins);
-    bridge.camera = camera;
-    bridge.width = width;
-    bridge.height = height;
-  }, [camera, level, width, height, margins, bridge]);
+  }, [camera, level, width, height, margins]);
+  // The picking uses the camera and the size of THIS frame: it is told again on every frame (no allocation, plain assignments), so it
+  // can never disagree with what is drawn, whatever moved the camera (the framing, the transition, a resize).
+  useFrame((state) => {
+    bridge.camera = state.camera as THREE.PerspectiveCamera;
+    bridge.width = state.size.width;
+    bridge.height = state.size.height;
+  });
   return null;
 }
 
@@ -174,7 +178,7 @@ function Lot({ level, scene }: { level: Level; scene: ParkingScene }) {
       {gates.map((g, i) => (
         <Gate key={`gate-${level.gates[i].side}-${level.gates[i].from}-${level.gates[i].to}`} level={level} scene={scene} index={i} info={g} />
       ))}
-      <mesh position={[0, -SLAB_H - 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -GROUND_DROP, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[90, 90]} />
         <meshLambertMaterial color={LOT_COLORS.grass} />
       </mesh>
@@ -237,11 +241,40 @@ const _q = new THREE.Quaternion();
 const _q2 = new THREE.Quaternion();
 const _q3 = new THREE.Quaternion();
 const _q4 = new THREE.Quaternion();
+const _q5 = new THREE.Quaternion();
+const LAYOUT_CAR = wheelLayout(2);
+const LAYOUT_TRUCK = wheelLayout(3);
 const _v = new THREE.Vector3();
 const Y = new THREE.Vector3(0, 1, 0);
 const Z = new THREE.Vector3(0, 0, 1);
 const X = new THREE.Vector3(1, 0, 0);
 const _c = new THREE.Color();
+
+/** Lays the wheels: they follow the vehicle, turn as it drives and (the front ones) steer into the bends. */
+function writeWheels(actors: Actor[], mesh: THREE.InstancedMesh | null) {
+  if (!mesh) return;
+  let n = 0;
+  for (let i = 0; i < actors.length; i++) {
+    const a = actors[i];
+    const layout = a.len === 3 ? LAYOUT_TRUCK : LAYOUT_CAR;
+    _q.setFromAxisAngle(Y, a.yaw);
+    _q2.setFromAxisAngle(Z, -a.pitch);
+    _q3.setFromAxisAngle(X, a.roll);
+    _q.multiply(_q2).multiply(_q3);
+    for (let k = 0; k < layout.length; k++) {
+      const w = layout[k];
+      _p.set(w.x, WHEEL_Y, w.z).applyQuaternion(_q).add(_v.set(a.x, 0.03, a.z));
+      // The front wheels steer; every wheel spins about its axle.
+      _q4.copy(_q);
+      if (w.front) _q4.multiply(_q5.setFromAxisAngle(Y, a.steer));
+      _q4.multiply(_q5.setFromAxisAngle(Z, a.spin));
+      _s.setScalar(a.hidden ? 0 : 1);
+      _m.compose(_p, _q4, _s);
+      mesh.setMatrixAt(n++, _m);
+    }
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+}
 
 /** Lays the arrow of every vehicle on its roof: it follows the vehicle (and its tilt) and points the way it goes. */
 function writeArrows(actors: Actor[], mesh: THREE.InstancedMesh | null, dressedId: number, dressedRoof: number) {
@@ -255,7 +288,7 @@ function writeArrows(actors: Actor[], mesh: THREE.InstancedMesh | null, dressedI
     _q.multiply(_q2).multiply(_q3);
     if (a.reverse) _q.multiply(_q4.setFromAxisAngle(Y, Math.PI));
     const roof = a.len === 3 ? 0.745 : a.id === dressedId ? dressedRoof : 0.575;
-    _p.set(0, roof + 0.012, 0).applyQuaternion(_q).add(_v.set(a.x, 0.03, a.z));
+    _p.set(0, (roof + 0.012) * (1 - 0.09 * a.squash), 0).applyQuaternion(_q).add(_v.set(a.x, 0.03, a.z));
     _s.setScalar(a.hidden ? 0 : a.len === 3 ? 1.5 : 1.12);
     _m.compose(_p, _q, _s);
     mesh.setMatrixAt(i, _m);
@@ -270,7 +303,9 @@ function writeVehicles(list: Actor[], body: THREE.InstancedMesh | null, lights: 
     const actor = list[i];
     const hide = actor.hidden;
     // The vehicle that wears a skin is drawn apart (its colours are in its geometry).
-    _s.setScalar(hide || actor.id === dressedId ? 0 : 1);
+    const sink = 1 - 0.09 * actor.squash;
+    if (hide || actor.id === dressedId) _s.setScalar(0);
+    else _s.set(1, sink, 1);
     _q.setFromAxisAngle(Y, actor.yaw);
     _q2.setFromAxisAngle(Z, -actor.pitch);
     _q3.setFromAxisAngle(X, actor.roll);
@@ -303,6 +338,8 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
     truckShadow: useRef<THREE.InstancedMesh>(null),
   };
   const arrows = useRef<THREE.InstancedMesh>(null);
+  const wheels = useRef<THREE.InstancedMesh>(null);
+  const wheelCount = useMemo(() => scene.actors.reduce((s, x) => s + (x.len === 3 ? LAYOUT_TRUCK.length : LAYOUT_CAR.length), 0), [scene]);
   const crown = useRef<THREE.Mesh>(null);
   const worn = useRef<THREE.Mesh>(null);
   const first = useRef(true);
@@ -330,11 +367,13 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
     const dressed = wornGeometry !== null ? scene.player : -1;
     writeVehicles(cars, refs.car.current, refs.carLights.current, refs.carShadow.current, dressed);
     writeVehicles(trucks, refs.truck.current, refs.truckLights.current, refs.truckShadow.current, dressed);
+    writeWheels(scene.actors, wheels.current);
     writeArrows(scene.actors, arrows.current, wornGeometry !== null ? scene.player : -1, roofTop(spec, player?.len ?? 2));
     const w = worn.current;
     if (w && player) {
       w.visible = !player.hidden;
       w.position.set(player.x, 0.03, player.z);
+      w.scale.set(1, 1 - 0.09 * player.squash, 1);
       _q.setFromAxisAngle(Y, player.yaw);
       _q2.setFromAxisAngle(Z, -player.pitch);
       _q3.setFromAxisAngle(X, player.roll);
@@ -365,6 +404,7 @@ function Vehicles({ scene, skin }: { scene: ParkingScene; skin: string }) {
         </>
       )}
       {wornGeometry && <mesh ref={worn} geometry={wornGeometry} material={skinMaterial(spec.finish)} />}
+      <instancedMesh ref={wheels} args={[a.wheel, a.body, wheelCount]} frustumCulled={false} />
       <instancedMesh ref={arrows} args={[a.arrow, a.lit, scene.actors.length]} frustumCulled={false} renderOrder={1} />
       <mesh ref={crown} geometry={a.crown} material={a.lit} visible={scene.player >= 0} />
     </group>
@@ -519,7 +559,7 @@ function PartInstances({ part, placements }: { part: DecorPart; placements: Plac
     const m = ref.current;
     if (!m) return;
     placements.forEach((p, i) => {
-      _p.set(p.x, -SLAB_H - 0.06, p.z);
+      _p.set(p.x, -GROUND_DROP, p.z);
       _q.setFromAxisAngle(Y, p.rot);
       _s.setScalar(p.scale);
       _m.compose(_p, _q, _s).multiply(part.matrix);
@@ -565,19 +605,6 @@ function World({ level, scene, decor, skin, offset }: { level: Level; scene: Par
       <HintMarker scene={scene} />
     </group>
   );
-}
-
-/** The road that links a level to the next one, across the grass between their plates. */
-function Link({ current, next, offset }: { current: Level; next: Level; offset: [number, number, number] }) {
-  const { lot } = sharedAssets();
-  const from = current.rows / 2 + ROAD_MARGIN;
-  const to = offset[2] - next.rows / 2 - ROAD_MARGIN;
-  const geometry = useMemo(() => {
-    const g = merge([box(ROAD_W + 0.5, 0.3, to - from + 2 * (PLATE_MARGIN - ROAD_MARGIN + 0.2), 0, -0.15, (from + to) / 2, LOT_COLORS.wood), box(ROAD_W, 0.024, to - from, 0, 0.012, (from + to) / 2, LOT_COLORS.road)]);
-    return g;
-  }, [from, to]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return <mesh geometry={geometry} material={lot} />;
 }
 
 const DURATION = 1.5;
@@ -633,7 +660,6 @@ function Scene({ level, scene, next, transition, onTransitionDone, bridge, margi
       <PerfMonitor />
       <World key={scene.uid} level={level} scene={scene} decor={decor} skin={skin} offset={[0, 0, 0]} />
       {next && <World key={next.scene.uid} level={next.level} scene={next.scene} decor={decor} skin={skin} offset={offset} />}
-      {next && <Link current={level} next={next.level} offset={offset} />}
       <Director next={next} offset={offset} transition={transition} margins={margins} onDone={onTransitionDone} />
     </>
   );

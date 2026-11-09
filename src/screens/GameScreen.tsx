@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization -- the screen is imperative: the scene and the rules are mutated, the callbacks read refs. */
 import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
@@ -73,7 +73,6 @@ import { Text } from '@/core/ui/Text';
 import { colors, fontSizes } from '@/core/ui/theme';
 import { protectionOffered, resetStreak, saveWithAd, saveWithCoins } from '@/core/streak';
 import { applyTap, compile, createState, type GameState } from '@/game/engine';
-import { pickVehicle } from '@/render/pick';
 import { nextStage } from '@/render/stage';
 import { dailyLevelForDay, DAILY_LEVELS, levelOfId } from '@/game/dailyLevels';
 import { GUIDE_IDLE_MS, guideMode, hintAvailable, nextHint, type Hint } from '@/game/guide';
@@ -243,6 +242,15 @@ export default function GameScreen() {
   const [trialEndId, setTrialEndId] = useState<string | null>(null);
   const tourRunning = useTourRunning();
   // Developers only: where the last touch landed and what was found there (a dot and a line of text over the scene).
+  // Where the scene view is on the screen (measured when it is laid out): the touches are given in points of the screen.
+  const viewOrigin = useRef({ x: 0, y: 0 });
+  const sceneView = useRef<ComponentRef<typeof View>>(null);
+  const measureScene = useCallback(() => {
+    sceneView.current?.measureInWindow((x, y) => {
+      viewOrigin.current.x = x;
+      viewOrigin.current.y = y;
+    });
+  }, []);
   const [touchDebug, setTouchDebug] = useState<{ x: number; y: number; text: string } | null>(null);
 
   const later = useCallback((fn: () => void, ms: number) => {
@@ -592,17 +600,23 @@ export default function GameScreen() {
   const runRef = useRef(run);
   runRef.current = run;
 
-  /** The vehicle under a touch: the position comes from the gesture handler, goes through the camera onto the ground, then to a vehicle. */
+  /**
+   * The vehicle under a touch. The touch comes from the gesture handler in points of the SCREEN; the canvas is where the scene view is
+   * (measured on its layout), so the point is made relative to it, then a ray is cast from the camera of the scene against the box of
+   * each vehicle (the finger is on a roof, not on the ground), and failing that the vehicle nearest to the finger on the screen is taken.
+   */
   const vehicleAt = useCallback(
-    (x: number, y: number): number => {
+    (screenX: number, screenY: number): number => {
       const r = runRef.current;
-      const ground = r ? bridge.ground(x, y) : null;
-      const found = r && ground ? pickVehicle(r.level, r.state, ground.x, ground.z) : -1;
+      const x = screenX - viewOrigin.current.x;
+      const y = screenY - viewOrigin.current.y;
+      const picked = r ? bridge.pick(x, y, r.scene) : { vehicle: -1, via: 'none' as const, distance: Infinity };
       if (testerTools()) {
-        const cell = r && ground ? `${Math.floor(ground.z + r.level.rows / 2)},${Math.floor(ground.x + r.level.cols / 2)}` : '-';
-        setTouchDebug({ x, y, text: `touch ${Math.round(x)},${Math.round(y)} → place ${cell} → ${found >= 0 ? `vehicle ${found}` : 'none'}` });
+        // A dot where the touch landed, the vehicle it selected circled for half a second, and what was found, in words.
+        if (r && picked.vehicle >= 0) r.scene.flash(picked.vehicle, 0.5);
+        setTouchDebug({ x, y, text: `touch ${Math.round(x)},${Math.round(y)} → ${picked.vehicle >= 0 ? `voiture #${picked.vehicle} (${picked.via === 'ray' ? 'rayon' : 'plus proche'})` : 'aucune'}` });
       }
-      return found;
+      return picked.vehicle;
     },
     [bridge],
   );
@@ -616,7 +630,7 @@ export default function GameScreen() {
         .maxDuration(700)
         .onEnd((e, success) => {
           if (!success) return;
-          const v = vehicleAt(e.x, e.y);
+          const v = vehicleAt(e.absoluteX, e.absoluteY);
           if (v >= 0) actRef.current(v);
         }),
     [vehicleAt],
@@ -777,7 +791,7 @@ export default function GameScreen() {
 
   /* --------------------------------------------------------------------------- what is drawn */
 
-  const guideAt = guide && run ? bridge.toScreen(run.scene.actors[guide.vehicle].x, run.scene.actors[guide.vehicle].z, 0.4) : null;
+  const guideAt = guide && run ? bridge.toScreen(run.scene.actors[guide.vehicle].x, run.scene.actors[guide.vehicle].z, 0.45) : null;
   // The bubbles go in the free band above the lot, or under it, never over it.
   const bubbleTop = level
     ? bubbleSlot(lotBandPx(level, width, height, margins), { top: insets.top + HEADER_H, bottom: height - margins.bottom }, 74)
@@ -795,7 +809,7 @@ export default function GameScreen() {
   return (
     <View style={styles.root}>
       <GestureDetector gesture={gesture}>
-        <View style={styles.scene} collapsable={false}>
+        <View ref={sceneView} onLayout={measureScene} style={styles.scene} collapsable={false}>
           {run && level && (
             <ParkingCanvas
               level={level}

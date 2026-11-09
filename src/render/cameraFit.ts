@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { SIDEWALK } from './coords';
+import { ROAD_GAP } from './coords';
 import type { Level } from '../game/types';
 
 /** Angle between the view direction and the ground (90 would be straight down). */
@@ -23,8 +23,8 @@ const DIR = new THREE.Vector3();
 export function fitCamera(camera: THREE.PerspectiveCamera, level: Pick<Level, 'rows' | 'cols'>, width: number, height: number, margins: Margins): { dist: number; shiftZ: number } {
   const tilt = THREE.MathUtils.degToRad(CAMERA_TILT_DEG);
   DIR.set(0, Math.sin(tilt), Math.cos(tilt));
-  const hw = level.cols / 2 + SIDEWALK;
-  const hd = level.rows / 2 + SIDEWALK;
+  const hw = level.cols / 2 + ROAD_GAP;
+  const hd = level.rows / 2 + ROAD_GAP;
   const corners: [number, number, number][] = [];
   for (const x of [-hw, hw]) for (const z of [-hd, hd]) for (const y of [0, FRAME_H]) corners.push([x, y, z]);
 

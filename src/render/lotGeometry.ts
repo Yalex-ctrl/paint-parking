@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { createRng } from '../core/rng';
 import { DELTA } from '../core/grid';
 import type { Level, Obstacle } from '../game/types';
-import { ASPHALT_Y, cellX, cellZ, ROAD_MARGIN, ROAD_W, SIDEWALK, SLAB_H } from './coords';
+import { ASPHALT_Y, cellX, cellZ, EXIT_LEN, ROAD_GAP, ROAD_MARGIN, ROAD_W } from './coords';
 import { box, cylinder, flatShape, merge, sphere } from './geo';
 import { LOT_COLORS as C } from './palette';
 import { yawOf } from './paths';
@@ -20,42 +20,38 @@ export function buildLotGeometry(level: Level): THREE.BufferGeometry {
   const hd = rows / 2;
   const rng = createRng(level.seed ^ 0x9e3779b9);
 
-  // The plate: lot + sidewalk + road, a little margin of wood at the edge.
-  const outerW = hw + SIDEWALK + ROAD_W + 0.25;
-  const outerD = hd + SIDEWALK + ROAD_W + 0.25;
-  parts.push(box(outerW * 2, SLAB_H, outerD * 2, 0, -SLAB_H / 2, 0, C.wood));
-
-  // The road: four strips round the sidewalk, darker asphalt (the strips overlap at the corners, which is fine).
-  const roadIn = ROAD_MARGIN - ROAD_W / 2;
-  const roadOut = ROAD_MARGIN + ROAD_W / 2;
-  const roadY = 0.012;
-  parts.push(box((hw + roadOut) * 2, 0.024, roadOut - roadIn, 0, roadY / 2 + 0.006, -(hd + (roadIn + roadOut) / 2), C.road));
-  parts.push(box((hw + roadOut) * 2, 0.024, roadOut - roadIn, 0, roadY / 2 + 0.006, hd + (roadIn + roadOut) / 2, C.road));
-  parts.push(box(roadOut - roadIn, 0.024, (hd + roadIn) * 2, -(hw + (roadIn + roadOut) / 2), roadY / 2 + 0.006, 0, C.road));
-  parts.push(box(roadOut - roadIn, 0.024, (hd + roadIn) * 2, hw + (roadIn + roadOut) / 2, roadY / 2 + 0.006, 0, C.road));
-  // The dashed line down the middle of the road.
-  const mid = ROAD_MARGIN;
-  for (let x = -hw - mid + 0.2; x < hw + mid; x += 0.9) {
-    parts.push(box(0.45, 0.01, 0.07, x + 0.22, 0.03, -(hd + mid), C.roadDash));
-    parts.push(box(0.45, 0.01, 0.07, x + 0.22, 0.03, hd + mid, C.roadDash));
+  // The road goes round the lot (four strips, dark asphalt) and its middle is marked by a dashed yellow line. There is no border:
+  // the lot is open on the road all round.
+  const roadIn = ROAD_GAP;
+  const roadOut = ROAD_GAP + ROAD_W;
+  const roadMid = ROAD_MARGIN;
+  const roadTop = 0.024;
+  const roadBox = (w: number, d: number, x: number, z: number) => box(w, roadTop + 0.1, d, x, (roadTop - 0.1) / 2, z, C.road);
+  parts.push(roadBox((hw + roadOut) * 2, ROAD_W, 0, -(hd + roadMid)));
+  parts.push(roadBox((hw + roadOut) * 2, ROAD_W, 0, hd + roadMid));
+  parts.push(roadBox(ROAD_W, (hd + roadIn) * 2, -(hw + roadMid), 0));
+  parts.push(roadBox(ROAD_W, (hd + roadIn) * 2, hw + roadMid, 0));
+  for (let x = -hw - roadMid + 0.2; x < hw + roadMid; x += 0.9) {
+    parts.push(box(0.45, 0.01, 0.07, x + 0.22, 0.03, -(hd + roadMid), C.roadDash));
+    parts.push(box(0.45, 0.01, 0.07, x + 0.22, 0.03, hd + roadMid, C.roadDash));
   }
-  for (let z = -hd - mid + 0.2; z < hd + mid; z += 0.9) {
-    parts.push(box(0.07, 0.01, 0.45, -(hw + mid), 0.03, z + 0.22, C.roadDash));
-    parts.push(box(0.07, 0.01, 0.45, hw + mid, 0.03, z + 0.22, C.roadDash));
+  for (let z = -hd - roadMid + 0.2; z < hd + roadMid; z += 0.9) {
+    parts.push(box(0.07, 0.01, 0.45, -(hw + roadMid), 0.03, z + 0.22, C.roadDash));
+    parts.push(box(0.07, 0.01, 0.45, hw + roadMid, 0.03, z + 0.22, C.roadDash));
   }
 
-  // The sidewalk: a raised ring of light wood round the lot.
-  const swY = 0.05;
-  parts.push(box((hw + SIDEWALK) * 2, 0.1, SIDEWALK, 0, swY, -(hd + SIDEWALK / 2), C.sidewalk));
-  parts.push(box((hw + SIDEWALK) * 2, 0.1, SIDEWALK, 0, swY, hd + SIDEWALK / 2, C.sidewalk));
-  parts.push(box(SIDEWALK, 0.1, hd * 2, -(hw + SIDEWALK / 2), swY, 0, C.sidewalk));
-  parts.push(box(SIDEWALK, 0.1, hd * 2, hw + SIDEWALK / 2, swY, 0, C.sidewalk));
+  // The road of exit: from the middle of the bottom road, straight down the screen toward the next parking, well visible.
+  parts.push(roadBox(ROAD_W, EXIT_LEN, 0, hd + roadMid + EXIT_LEN / 2));
+  for (let z = hd + roadMid + 0.5; z < hd + roadMid + EXIT_LEN - 0.3; z += 0.9) parts.push(box(0.07, 0.01, 0.45, 0, 0.03, z, C.roadDash));
 
-  // The way out: the road goes on past the corner of the lot, straight away from it, across the grass (it is seen above the lot).
-  const exitX = hw + mid;
-  parts.push(box(roadOut - roadIn, 0.4, 40, exitX, 0.024 - 0.2, -(hd + mid) - 20, C.road));
-  for (let z = -(hd + mid) - 1; z > -(hd + mid) - 40; z -= 0.9) parts.push(box(0.07, 0.01, 0.45, exitX, 0.03, z, C.roadDash));
-
+  // The limit of the lot: one thin continuous white line on the ground (nothing stands up that could stop a vehicle), and a small
+  // kerb at each of the four corners, for the look only.
+  const edgeY = ASPHALT_Y + 0.03;
+  parts.push(box(hw * 2 + 0.08, 0.012, 0.07, 0, edgeY, -hd, C.line));
+  parts.push(box(hw * 2 + 0.08, 0.012, 0.07, 0, edgeY, hd, C.line));
+  parts.push(box(0.07, 0.012, hd * 2, -hw, edgeY, 0, C.line));
+  parts.push(box(0.07, 0.012, hd * 2, hw, edgeY, 0, C.line));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(box(0.3, 0.16, 0.3, sx * (hw + 0.08), 0.08, sz * (hd + 0.08), C.sidewalk));
   const isVoid = new Set(level.voids.map(([r, c]) => r * cols + c));
   // The places: each cell a slab of grey-violet asphalt, two shades chosen at random so it is not flat.
   for (let r = 0; r < rows; r++) {
@@ -132,8 +128,8 @@ export function gateGeometry(level: Level, index: number): { geometry: THREE.Buf
   const from = g.from;
   const to = g.to;
   const span = to - from + 1;
-  // The middle of the barrier, on the sidewalk, right outside the lot on that side.
-  const edge = (horizontal ? level.cols : level.rows) / 2 + SIDEWALK / 2;
+  // The middle of the barrier, on the limit of the lot on that side.
+  const edge = (horizontal ? level.cols : level.rows) / 2 + ROAD_GAP / 2;
   const sign = g.side === 'R' || g.side === 'D' ? 1 : -1;
   const lane = (from + to) / 2;
   const x = horizontal ? sign * edge : cellX(level, lane);

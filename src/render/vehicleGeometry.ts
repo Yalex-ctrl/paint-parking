@@ -39,9 +39,7 @@ export function carGeometry(len: 2 | 3): THREE.BufferGeometry {
     parts.push(box(L * 0.04, 0.17, W * 0.88, L * 0.48, 0.5, 0, GLASS));
     parts.push(box(L * 0.62, 0.42, W * 0.98, -L * 0.2, 0.53, 0, ROOF));
   }
-  // Wheels.
-  const axles = len === 2 ? [L * 0.3, -L * 0.3] : [L * 0.36, -L * 0.18, -L * 0.36];
-  for (const x of axles) for (const side of [-1, 1]) parts.push(wheel(0.13, 0.1, x, 0.13, side * W * 0.5, TYRE));
+  // The wheels are not part of the body: they turn and the front ones steer (see `wheelGeometry`).
   return merge(parts);
 }
 
@@ -107,8 +105,6 @@ export function skinGeometry(spec: SkinSpec, len: 2 | 3): THREE.BufferGeometry {
     parts.push(box(x(0.04), 0.17, W * 0.88, x(0.48), 0.5, 0, GLASS));
     parts.push(box(x(0.62), 0.42, W * 0.98, x(-0.2), 0.53, 0, spec.roof));
   }
-  const axles = len === 2 ? [L * 0.3, -L * 0.3] : [L * 0.36, -L * 0.18, -L * 0.36];
-  for (const ax of axles) for (const side of [-1, 1]) parts.push(wheel(0.13, 0.1, ax, 0.13, side * W * 0.5, TYRE));
   for (const side of [-1, 1]) {
     parts.push(box(0.06, 0.08, 0.13, L / 2 + 0.005, 0.25, side * W * 0.3, HEAD));
     parts.push(box(0.06, 0.08, 0.13, -L / 2 - 0.005, 0.25, side * W * 0.3, TAIL));
@@ -232,3 +228,25 @@ export function roofTop(spec: SkinSpec | null, len: 2 | 3): number {
   if (spec?.extras.includes("roundroof")) return 0.62;
   return 0.575;
 }
+
+/* ------------------------------------------------------------------------------------------ the wheels */
+
+/** Where the wheels of a vehicle are, in its own frame (front along +X), and which ones steer. */
+export function wheelLayout(len: 2 | 3): { x: number; z: number; front: boolean }[] {
+  const L = len * CELL_FILL;
+  const xs = len === 2 ? [L * 0.3, -L * 0.3] : [L * 0.36, -L * 0.18, -L * 0.36];
+  const out: { x: number; z: number; front: boolean }[] = [];
+  xs.forEach((x, i) => {
+    for (const side of [-1, 1]) out.push({ x, z: side * WIDTH * 0.5, front: i === 0 });
+  });
+  return out;
+}
+
+/** One wheel, with its axle along Z; every wheel of every vehicle is an instance of it. */
+export function wheelGeometry(): THREE.BufferGeometry {
+  return merge([wheel(WHEEL_R, 0.1, 0, 0, 0, TYRE), wheel(WHEEL_R * 0.55, 0.108, 0, 0, 0, '#b9bdc9')]);
+}
+
+/** Radius of a wheel, and the height of its axle above the ground. */
+export const WHEEL_R = 0.13;
+export const WHEEL_Y = 0.13;

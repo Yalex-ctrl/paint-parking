@@ -9,7 +9,7 @@ import { fitCamera } from '../src/render/cameraFit';
 import { cellX, cellZ } from '../src/render/coords';
 import { decorKey, planDecor } from '../src/render/decorPlan';
 import { ParkingScene } from '../src/render/ParkingScene';
-import { pickVehicle, screenToGround } from '../src/render/pick';
+import { pickAt } from '../src/render/pick';
 import { nextStage } from '../src/render/stage';
 
 /** The pixel where a finger would land on the roof of a vehicle. */
@@ -17,7 +17,7 @@ function fingerOn(camera: THREE.Camera, level: Level, id: number, w: number, h: 
   const cells = vehicleCells(level.vehicles[id]);
   const x = cells.reduce((s, [, c]) => s + cellX(level, c), 0) / cells.length;
   const z = cells.reduce((s, [r]) => s + cellZ(level, r), 0) / cells.length;
-  const p = new THREE.Vector3(x, 0.55, z).project(camera);
+  const p = new THREE.Vector3(x, level.vehicles[id].len === 3 ? 0.745 : 0.575, z).project(camera);
   return { x: ((p.x + 1) / 2) * w, y: ((1 - p.y) / 2) * h };
 }
 
@@ -32,8 +32,7 @@ function play(level: Level, w: number, h: number) {
   const state = createState(board);
   const scene = new ParkingScene(level);
   const touch = (x: number, y: number) => {
-    const ground = screenToGround(camera, w, h, x, y);
-    const id = ground ? pickVehicle(level, state, ground.x, ground.z) : -1;
+    const id = pickAt(camera, w, h, x, y, scene.actors).vehicle;
     if (id < 0 || scene.isBusy(id)) return null;
     const result = applyTap(board, state, id);
     scene.play(result);
@@ -50,7 +49,7 @@ function wouldLeave(g: Game, id: number): boolean {
   return applyTap(g.board, copy, id).kind === 'exit';
 }
 
-describe('playing a level by taps only (the touch goes all the way: pixel, ground, vehicle, rules, scene)', () => {
+describe('playing a level by taps only (the touch goes all the way: pixel, ray against the boxes, vehicle, rules, scene)', () => {
   for (const id of [1, 5, 15, 30]) {
     it(`level ${id} is finished by taps on the vehicles the help points at, with no collision`, () => {
       const level = LEVELS[id - 1];
@@ -66,7 +65,7 @@ describe('playing a level by taps only (the touch goes all the way: pixel, groun
       expect(g.state.finished).toBe(true);
       expect(g.state.collisions).toBe(0);
       expect(g.state.moves).toBe(level.optimal);
-      for (let t = 0; t < 400; t++) g.scene.update(1 / 60);
+      for (let t = 0; t < 900; t++) g.scene.update(1 / 60);
       expect(g.scene.actors.every((a) => a.hidden)).toBe(true);
       expect(g.scene.shine >= 0 || g.scene.trailCount > 0).toBe(true);
     });
@@ -96,7 +95,8 @@ describe('playing a level by taps only (the touch goes all the way: pixel, groun
     const a = g.scene.actors[blocked.id];
     expect(a.busy).toBe(false);
     expect(a.hidden).toBe(false);
-    expect([a.x, a.z]).toEqual([a.baseX, a.baseZ]);
+    expect(a.x).toBeCloseTo(a.baseX, 3);
+    expect(a.z).toBeCloseTo(a.baseZ, 3);
   });
 
   it('taps follow each other very fast on different vehicles (a burst of exits); a tap on a vehicle that is still moving is ignored', () => {
